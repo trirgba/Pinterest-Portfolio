@@ -9,9 +9,10 @@ import {
   doc,
   getDoc,
   getDocs,
-  query,
   orderBy,
 } from 'firebase/firestore';
+import { getOptimizedUrl } from '../cloudinary.js';
+import { SITE_CONFIG } from '../config/seo.js';
 
 /**
  * Tính grid span dựa trên aspect ratio — Spec Section 6
@@ -82,7 +83,11 @@ function renderMosaicGrid(images, container) {
     item.style.animationDelay = `${index * 40}ms`;
     item.dataset.index = index;
 
-    item.innerHTML = `<img src="${img.url}" alt="Photo ${index + 1}" loading="lazy">`;
+    // Lấy tiêu đề dự án để làm SEO, lấy fallback từ biến toàn cục nếu chưa có
+    const projectName = document.getElementById('project-title')?.textContent || 'Project';
+    const seoAlt = `${projectName} - ${SITE_CONFIG.title} - Ảnh ${index + 1}`;
+
+    item.innerHTML = `<img src="${getOptimizedUrl(img.cloudinaryId, { width: 800 })}" alt="${seoAlt}" title="${seoAlt}" loading="lazy">`;
 
     // Click to open lightbox
     item.addEventListener('click', () => openLightbox(images, index));
@@ -104,7 +109,8 @@ function openLightbox(images, index) {
   const overlay = document.getElementById('lightbox');
   const img = overlay.querySelector('img');
 
-  img.src = images[index].url;
+  // Lightbox dùng ảnh to hơn nhưng vẫn ép sang WebP
+  img.src = getOptimizedUrl(images[index].cloudinaryId, { width: 1600 });
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -122,7 +128,7 @@ function navigateLightbox(direction) {
 
   const overlay = document.getElementById('lightbox');
   const img = overlay.querySelector('img');
-  img.src = lightboxImages[currentLightboxIndex].url;
+  img.src = getOptimizedUrl(lightboxImages[currentLightboxIndex].cloudinaryId, { width: 1600 });
 }
 
 /**

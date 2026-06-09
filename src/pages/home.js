@@ -11,6 +11,8 @@ import {
   orderBy,
   limit,
 } from 'firebase/firestore';
+import { getOptimizedUrl } from '../cloudinary.js';
+import { SITE_CONFIG } from '../config/seo.js';
 
 /**
  * Fetch tất cả projects và 3 ảnh đầu tiên cho thumbnail
@@ -60,23 +62,25 @@ function renderProjectCard(project) {
 
   const [img1, img2, img3] = project.images;
 
+  const getSeoAlt = (index) => `${project.name} - ${SITE_CONFIG.title} - Ảnh ${index}`;
+
   card.innerHTML = `
     <div class="project-thumb">
       <div class="thumb-img-large">
         ${img1
-          ? `<img src="${img1.url}" alt="${project.name}" loading="lazy">`
+          ? `<img src="${getOptimizedUrl(img1.cloudinaryId, { width: 800 })}" alt="${getSeoAlt(1)}" title="${getSeoAlt(1)}" loading="lazy">`
           : '<div class="thumb-placeholder"></div>'
         }
       </div>
       <div class="thumb-img">
         ${img2
-          ? `<img src="${img2.url}" alt="${project.name}" loading="lazy">`
+          ? `<img src="${getOptimizedUrl(img2.cloudinaryId, { width: 400 })}" alt="${getSeoAlt(2)}" title="${getSeoAlt(2)}" loading="lazy">`
           : '<div class="thumb-placeholder"></div>'
         }
       </div>
       <div class="thumb-img">
         ${img3
-          ? `<img src="${img3.url}" alt="${project.name}" loading="lazy">`
+          ? `<img src="${getOptimizedUrl(img3.cloudinaryId, { width: 400 })}" alt="${getSeoAlt(3)}" title="${getSeoAlt(3)}" loading="lazy">`
           : '<div class="thumb-placeholder"></div>'
         }
       </div>
