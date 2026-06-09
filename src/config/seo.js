@@ -7,7 +7,7 @@ export const SITE_CONFIG = {
   authorName: "Trí Xin Chào",
   designerName: "Nguyễn Minh Trí",
   email: "trixinchao@gmail.com",
-  linkedin: "https://www.linkedin.com/in/trí/",
+  linkedin: "https://www.linkedin.com/in/trixinchao/",
   website: "https://www.tringuyen.io.vn/",
   role: "Designer",
   title: "Designer Nguyễn Minh Trí — Trí Xin Chào Portfolio",

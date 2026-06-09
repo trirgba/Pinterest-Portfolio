@@ -73,7 +73,8 @@ export async function deleteFromCloudinary(publicId, idToken) {
 export function getOptimizedUrl(publicId, options = {}) {
   // Ép mặc định sang webp và chất lượng tự động tối ưu
   const { width, quality = 'auto', format = 'webp' } = options;
-  const transforms = [`f_${format}`, `q_${quality}`];
+  // Bổ sung fl_keep_iptc để dặn Cloudinary KHÔNG được xóa metadata gốc khi nén
+  const transforms = [`f_${format}`, `q_${quality}`, `fl_keep_iptc`];
   if (width) transforms.push(`w_${width}`);
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${transforms.join(',')}/${publicId}`;
 }
