@@ -15,25 +15,35 @@ import {
 import { getOptimizedUrl } from '../cloudinary.js';
 import { SITE_CONFIG } from '../config/seo.js';
 
+
 /**
- * Xác định số cột (colSpan) dựa trên tỷ lệ ảnh
+ * Tính toán số cột: 2 ảnh ngang nằm kề nhau sẽ được nhóm lại, mỗi ảnh chiếm 2 cột
  */
-function calculateColSpan(width, height) {
-  const ratio = width / height;
-  if (ratio >= 1.3) {
-    return 2; // Hình ngang chiếm 2 cột
+function calculateMasonryColSpans(images) {
+  const colSpans = new Array(images.length).fill(1);
+  const isLandscape = (img) => img.width && img.height && (img.width / img.height >= 1.3);
+
+  for (let i = 0; i < images.length; i++) {
+    if (colSpans[i] === 2) continue; // Đã được nhóm
+    
+    if (isLandscape(images[i])) {
+      // Kiểm tra ảnh tiếp theo
+      if (i + 1 < images.length && isLandscape(images[i + 1])) {
+        colSpans[i] = 2;
+        colSpans[i + 1] = 2;
+      }
+    }
   }
-  return 1;
+  return colSpans;
 }
 
 /**
- * Tính toán chiều cao thực tế để cấp phát số lượng row (Row Spans)
- * Sử dụng grid-auto-rows: 10px để tính chính xác mà không bị cắt ảnh
+ * Đo chiều cao thực tế để chia dòng chính xác trong CSS Grid (grid-auto-rows: 10px)
  */
 function calculateMasonryRowSpans(container) {
   const computedStyle = window.getComputedStyle(container);
   const gap = parseInt(computedStyle.rowGap) || 16;
-  const rowHeight = 10; // Khớp với grid-auto-rows: 10px trong grid.css
+  const rowHeight = 10;
 
   const items = container.querySelectorAll('.mosaic-item');
 
@@ -90,6 +100,7 @@ async function fetchProjectDetail(projectId) {
  */
 function renderMosaicGrid(images, container) {
   container.innerHTML = '';
+  const colSpans = calculateMasonryColSpans(images);
 
   images.forEach((img, index) => {
     const item = document.createElement('div');
@@ -97,11 +108,8 @@ function renderMosaicGrid(images, container) {
     item.style.animationDelay = `${index * 40}ms`;
     item.dataset.index = index;
 
-    // Apply colSpan for dense grid
-    if (img.width && img.height) {
-      const colSpan = calculateColSpan(img.width, img.height);
-      item.style.gridColumn = `span ${colSpan}`;
-    }
+    // Cấp phát cột theo kết quả ghép đôi
+    item.style.gridColumn = `span ${colSpans[index]}`;
 
     // Lấy tiêu đề dự án để làm SEO, lấy fallback từ biến toàn cục nếu chưa có
     const projectName = document.getElementById('project-title')?.textContent || 'Project';
@@ -222,10 +230,10 @@ export async function initProjectPage() {
     if (grid && project.images.length > 0) {
       renderMosaicGrid(project.images, grid);
       
-      // Kích hoạt tính toán chiều cao masonry sau khi render
+      // Tính chiều cao sau khi render
       calculateMasonryRowSpans(grid);
       
-      // Lắng nghe sự kiện resize để tính lại chiều cao khi kích thước màn hình thay đổi
+      // Lắng nghe resize để tính lại
       window.addEventListener('resize', () => {
         calculateMasonryRowSpans(grid);
       });
