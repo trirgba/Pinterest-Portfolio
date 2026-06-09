@@ -16,27 +16,43 @@ import { getOptimizedUrl } from '../cloudinary.js';
 import { SITE_CONFIG } from '../config/seo.js';
 
 /**
- * Tính grid span dựa trên aspect ratio — Spec Section 6
- * @param {number} width - Chiều rộng gốc (px)
- * @param {number} height - Chiều cao gốc (px)
- * @returns {{ colSpan: number, rowSpan: number }}
+ * Xác định số cột (colSpan) dựa trên tỷ lệ ảnh
  */
-function calculateSpans(width, height) {
+function calculateColSpan(width, height) {
   const ratio = width / height;
-
-  if (ratio >= 1.6) {
-    // Hình ngang rộng → chiếm 2 cột
-    return { colSpan: 2, rowSpan: 1 };
-  } else if (ratio <= 0.7) {
-    // Hình dọc → chiếm 2 hàng
-    return { colSpan: 1, rowSpan: 2 };
-  } else if (ratio >= 0.9 && ratio <= 1.1) {
-    // Gần vuông → 1x1
-    return { colSpan: 1, rowSpan: 1 };
-  } else {
-    // Các trường hợp khác: tính theo tỉ lệ
-    return { colSpan: 1, rowSpan: Math.round(1 / ratio) || 1 };
+  if (ratio >= 1.3) {
+    return 2; // Hình ngang chiếm 2 cột
   }
+  return 1;
+}
+
+/**
+ * Tính toán chiều cao thực tế để cấp phát số lượng row (Row Spans)
+ * Sử dụng grid-auto-rows: 10px để tính chính xác mà không bị cắt ảnh
+ */
+function calculateMasonryRowSpans(container) {
+  const computedStyle = window.getComputedStyle(container);
+  const gap = parseInt(computedStyle.rowGap) || 16;
+  const rowHeight = 10; // Khớp với grid-auto-rows: 10px trong grid.css
+
+  const items = container.querySelectorAll('.mosaic-item');
+
+  items.forEach((item) => {
+    const imgEl = item.querySelector('img');
+    if (!imgEl) return;
+
+    const setSpan = () => {
+      const height = imgEl.getBoundingClientRect().height;
+      const rowSpan = Math.ceil((height + gap) / (rowHeight + gap));
+      item.style.gridRowEnd = `span ${rowSpan}`;
+    };
+
+    if (imgEl.complete) {
+      setSpan();
+    } else {
+      imgEl.addEventListener('load', setSpan);
+    }
+  });
 }
 
 /**
@@ -81,11 +97,10 @@ function renderMosaicGrid(images, container) {
     item.style.animationDelay = `${index * 40}ms`;
     item.dataset.index = index;
 
-    // Apply calculated spans for dense grid
+    // Apply colSpan for dense grid
     if (img.width && img.height) {
-      const spans = calculateSpans(img.width, img.height);
-      item.style.gridColumn = `span ${spans.colSpan}`;
-      item.style.gridRow = `span ${spans.rowSpan}`;
+      const colSpan = calculateColSpan(img.width, img.height);
+      item.style.gridColumn = `span ${colSpan}`;
     }
 
     // Lấy tiêu đề dự án để làm SEO, lấy fallback từ biến toàn cục nếu chưa có
@@ -206,6 +221,15 @@ export async function initProjectPage() {
 
     if (grid && project.images.length > 0) {
       renderMosaicGrid(project.images, grid);
+      
+      // Kích hoạt tính toán chiều cao masonry sau khi render
+      calculateMasonryRowSpans(grid);
+      
+      // Lắng nghe sự kiện resize để tính lại chiều cao khi kích thước màn hình thay đổi
+      window.addEventListener('resize', () => {
+        calculateMasonryRowSpans(grid);
+      });
+      
     } else if (grid) {
       grid.innerHTML = `
         <div class="empty-state" style="grid-column: 1 / -1;">
