@@ -1,0 +1,90 @@
+/* ===========================
+   Mosaic Grid — Spec Section 6
+   =========================== */
+.mosaic-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 4), 1fr);
+  grid-auto-rows: var(--row-unit, 80px);
+  gap: var(--global-gap, 16px);
+  grid-auto-flow: dense;
+}
+
+.mosaic-item {
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  position: relative;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.mosaic-item:hover {
+  transform: scale(1.015);
+  box-shadow: var(--shadow-lg);
+  z-index: 1;
+}
+
+.mosaic-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.mosaic-item:hover img {
+  transform: scale(1.05);
+}
+
+/* Lightbox overlay */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+  cursor: zoom-out;
+  backdrop-filter: blur(8px);
+}
+
+.lightbox-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.lightbox-overlay img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  transform: scale(0.9);
+  transition: transform var(--transition-normal);
+}
+
+.lightbox-overlay.active img {
+  transform: scale(1);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 24px;
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

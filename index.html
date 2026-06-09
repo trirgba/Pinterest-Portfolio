@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portfolio cá nhân — Bộ sưu tập dự án nhiếp ảnh">
+  <title>Portfolio — Nguyễn Minh Trí</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="site-logo">Portfolio</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container" style="padding-top: 32px; padding-bottom: 64px;">
+    <div id="projects-grid" class="projects-grid"></div>
+  </main>
+
+  <script type="module">
+    import './src/main.js';
+    import { initHomePage } from './src/pages/home.js';
+    initHomePage();
+  </script>
+</body>
+</html>

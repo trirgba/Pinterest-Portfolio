@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Admin Header -->
+  <header class="admin-header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <a href="/" style="color: var(--color-text-muted); display: flex;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </a>
+      <h1>Admin Dashboard</h1>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div id="admin-user-info" class="admin-user-info"></div>
+      <button id="btn-logout" class="btn-secondary btn-sm">Đăng xuất</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="admin-content">
+    <!-- Toolbar -->
+    <div class="admin-toolbar">
+      <h2>Projects</h2>
+      <button id="btn-create-project" class="btn-primary">
+        <span>+</span> Tạo project
+      </button>
+    </div>
+
+    <!-- Project List -->
+    <div id="project-list" class="project-list-admin"></div>
+
+    <!-- Project Detail (ẩn mặc định) -->
+    <section id="project-detail" style="display: none; margin-top: 40px; border-top: 1px solid var(--color-border); padding-top: 32px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div>
+          <button id="btn-back-to-list" class="btn-secondary btn-sm" style="margin-bottom: 12px;">← Quay lại</button>
+          <h2 id="detail-project-name"></h2>
+          <span id="detail-image-count" class="meta" style="color: var(--color-text-muted); font-size: 14px;"></span>
+        </div>
+      </div>
+
+      <!-- Upload Zone -->
+      <div id="upload-zone" class="upload-zone">
+        <div class="icon">📤</div>
+        <p>Kéo thả ảnh vào đây hoặc bấm để chọn file</p>
+        <p style="font-size: 12px; margin-top: 4px; color: var(--color-text-subtle);">Hỗ trợ JPG, PNG, WebP</p>
+        <input type="file" id="file-input" multiple accept="image/*" style="display: none;">
+      </div>
+
+      <!-- Upload Progress -->
+      <div id="upload-progress" class="upload-progress"></div>
+
+      <!-- Image Grid (Drag & Drop) -->
+      <p style="margin-top: 24px; font-size: 13px; color: var(--color-text-muted);">💡 Kéo thả để sắp xếp thứ tự ảnh</p>
+      <div id="admin-image-grid" class="admin-image-grid"></div>
+    </section>
+  </div>
+
+  <!-- Modal: Create Project -->
+  <div id="modal-create" class="modal-overlay">
+    <div class="modal-content">
+      <h2>Tạo project mới</h2>
+      <form id="form-create-project">
+        <div class="form-group">
+          <label for="input-project-name">Tên project</label>
+          <input type="text" id="input-project-name" placeholder="Nhập tên project..." required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="modal-cancel" class="btn-secondary">Huỷ</button>
+          <button type="submit" class="btn-primary">Tạo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import '../src/styles/main.css';
+    import '../src/styles/admin.css';
+    import { initAdminPage } from '../src/pages/admin.js';
+    initAdminPage();
+  </script>
+</body>
+</html>
