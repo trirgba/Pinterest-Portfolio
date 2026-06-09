@@ -76,11 +76,8 @@ function renderMosaicGrid(images, container) {
   container.innerHTML = '';
 
   images.forEach((img, index) => {
-    const { colSpan, rowSpan } = calculateSpans(img.width, img.height);
     const item = document.createElement('div');
     item.className = 'mosaic-item animate-fade-in';
-    item.style.gridColumn = `span ${colSpan}`;
-    item.style.gridRow = `span ${rowSpan}`;
     item.style.animationDelay = `${index * 40}ms`;
     item.dataset.index = index;
 
@@ -136,22 +133,14 @@ function navigateLightbox(direction) {
  * Render loading skeletons cho mosaic
  */
 function renderMosaicSkeletons(container) {
-  const spans = [
-    { col: 2, row: 1 },
-    { col: 1, row: 2 },
-    { col: 1, row: 1 },
-    { col: 1, row: 1 },
-    { col: 2, row: 1 },
-    { col: 1, row: 1 },
-    { col: 1, row: 2 },
-    { col: 1, row: 1 },
-  ];
+  const heights = [200, 300, 250, 180, 320, 220, 280, 240];
 
-  spans.forEach(({ col, row }) => {
+  heights.forEach((h) => {
     const skeleton = document.createElement('div');
     skeleton.className = 'skeleton';
-    skeleton.style.gridColumn = `span ${col}`;
-    skeleton.style.gridRow = `span ${row}`;
+    skeleton.style.height = `${h}px`;
+    skeleton.style.marginBottom = 'var(--global-gap, 16px)';
+    skeleton.style.breakInside = 'avoid';
     container.appendChild(skeleton);
   });
 }
