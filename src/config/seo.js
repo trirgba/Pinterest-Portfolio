@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
   designerName: "Nguyễn Minh Trí",
   email: "trixinchao@gmail.com",
   linkedin: "https://www.linkedin.com/in/trixinchao/",
-  website: "https://www.tringuyen.io.vn/",
+  website: "https://tringuyen.io.vn/",
   role: "Designer",
   title: "Designer Nguyễn Minh Trí — Trí Xin Chào Portfolio",
   description: "Portfolio nhiếp ảnh và thiết kế của Designer Nguyễn Minh Trí (Trí Xin Chào). Khám phá các dự án sáng tạo và bộ sưu tập nghệ thuật.",
