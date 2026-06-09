@@ -81,6 +81,13 @@ function renderMosaicGrid(images, container) {
     item.style.animationDelay = `${index * 40}ms`;
     item.dataset.index = index;
 
+    // Apply calculated spans for dense grid
+    if (img.width && img.height) {
+      const spans = calculateSpans(img.width, img.height);
+      item.style.gridColumn = `span ${spans.colSpan}`;
+      item.style.gridRow = `span ${spans.rowSpan}`;
+    }
+
     // Lấy tiêu đề dự án để làm SEO, lấy fallback từ biến toàn cục nếu chưa có
     const projectName = document.getElementById('project-title')?.textContent || 'Project';
     const seoAlt = `${projectName} - ${SITE_CONFIG.title} - Ảnh ${index + 1}`;
