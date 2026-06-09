@@ -17,20 +17,28 @@
 }
 
 .mosaic-item:hover {
-  transform: scale(1.015);
   box-shadow: var(--shadow-lg);
   z-index: 1;
+}
+
+.mosaic-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  transition: background var(--transition-fast);
+  pointer-events: none;
+  border-radius: var(--radius-card);
+}
+
+.mosaic-item:hover::after {
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .mosaic-item img {
   width: 100%;
   height: auto;
   display: block;
-  transition: transform var(--transition-normal);
-}
-
-.mosaic-item:hover img {
-  transform: scale(1.05);
 }
 
 /* Lightbox overlay */
