@@ -211,6 +211,13 @@ button {
   background: var(--color-border);
 }
 
+@media (max-width: 1024px) {
+  .back-btn,
+  .login-btn {
+    background: var(--color-border);
+  }
+}
+
 /* ===========================
    Project Cards Grid — Spec Section 5
    =========================== */
