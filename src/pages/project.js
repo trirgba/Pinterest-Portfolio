@@ -9,6 +9,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   orderBy,
 } from 'firebase/firestore';
 import { getOptimizedUrl } from '../cloudinary.js';

@@ -76,5 +76,8 @@ export function getOptimizedUrl(publicId, options = {}) {
   // Bổ sung fl_keep_iptc để dặn Cloudinary KHÔNG được xóa metadata gốc khi nén
   const transforms = [`f_${format}`, `q_${quality}`, `fl_keep_iptc`];
   if (width) transforms.push(`w_${width}`);
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${transforms.join(',')}/${publicId}`;
+  // Encode từng phần của publicId để xử lý ký tự đặc biệt (dấu tiếng Việt, khoảng trắng...)
+  // nhưng giữ nguyên '/' cho cấu trúc folder
+  const encodedId = publicId.split('/').map(encodeURIComponent).join('/');
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${transforms.join(',')}/${encodedId}`;
 }
