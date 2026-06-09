@@ -228,11 +228,6 @@ button {
 
 .project-card {
   display: block;
-  transition: transform var(--transition-fast);
-}
-
-.project-card:hover {
-  transform: translateY(-4px);
 }
 
 .project-card:hover .project-thumb {
@@ -281,7 +276,7 @@ button {
 
 .project-card:hover .thumb-img::after,
 .project-card:hover .thumb-img-large::after {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .thumb-placeholder {
