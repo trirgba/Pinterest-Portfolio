@@ -24,7 +24,7 @@ function layoutJustifiedGrid(images, container) {
   if (!containerWidth) return;
 
   const gap = 16;
-  const targetHeight = window.innerWidth <= 768 ? 200 : 350;
+  const targetHeight = window.innerWidth <= 768 ? 150 : 300;
   
   let currentRow = [];
   let currentRowWidth = 0;
