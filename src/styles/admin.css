@@ -66,10 +66,7 @@
 
 /* Dashboard */
 .admin-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px var(--global-gap);
+  padding: 16px 0;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
   position: sticky;
