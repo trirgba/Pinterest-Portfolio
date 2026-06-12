@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { getOptimizedUrl } from '../cloudinary.js';
 import { SITE_CONFIG } from '../config/seo.js';
+import { getCurrentUser } from '../auth.js';
 
 /**
  * Fetch tất cả projects và 3 ảnh đầu tiên cho thumbnail
@@ -130,6 +131,16 @@ function renderEmptyState(container) {
  */
 export async function initHomePage() {
   const grid = document.getElementById('projects-grid');
+  
+  // Cập nhật trạng thái nút Login nếu đã đăng nhập
+  const loginBtn = document.querySelector('.login-btn');
+  getCurrentUser().then(user => {
+    if (user && loginBtn) {
+      loginBtn.textContent = 'Dashboard';
+      loginBtn.href = '/admin/dashboard.html';
+    }
+  });
+
   if (!grid) return;
 
   // Show loading
