@@ -17,52 +17,55 @@ import { SITE_CONFIG } from '../config/seo.js';
 
 
 /**
- * Tính toán số cột: 2 ảnh ngang nằm kề nhau sẽ được nhóm lại, mỗi ảnh chiếm 2 cột
+ * Thuật toán Justified Image Grid (Phong cách Behance/Flickr)
  */
-function calculateMasonryColSpans(images) {
-  const colSpans = new Array(images.length).fill(1);
-  const isLandscape = (img) => img.width && img.height && (img.width / img.height >= 1.3);
+function layoutJustifiedGrid(images, container) {
+  const containerWidth = container.clientWidth;
+  if (!containerWidth) return;
 
-  for (let i = 0; i < images.length; i++) {
-    if (colSpans[i] === 2) continue; // Đã được nhóm
-    
-    if (isLandscape(images[i])) {
-      // Kiểm tra ảnh tiếp theo
-      if (i + 1 < images.length && isLandscape(images[i + 1])) {
-        colSpans[i] = 2;
-        colSpans[i + 1] = 2;
-      }
+  const gap = 16;
+  const targetHeight = window.innerWidth <= 768 ? 200 : 350;
+  
+  let currentRow = [];
+  let currentRowWidth = 0;
+  
+  const itemElements = Array.from(container.children);
+
+  images.forEach((img, index) => {
+    // Lấy tỷ lệ từ dữ liệu, fallback 1:1 nếu thiếu
+    const ratio = (img.width && img.height) ? (img.width / img.height) : 1;
+    const itemWidthAtTarget = ratio * targetHeight;
+
+    if (currentRow.length > 0 && currentRowWidth + itemWidthAtTarget + (currentRow.length * gap) > containerWidth) {
+      // Hàng đã đầy, tính scale factor để kéo căng ra cho khít 100% chiều rộng
+      const gapsWidth = (currentRow.length - 1) * gap;
+      const availableWidth = containerWidth - gapsWidth;
+      const scale = availableWidth / currentRowWidth;
+      const finalHeight = targetHeight * scale;
+
+      currentRow.forEach((rowItem) => {
+        const itemWidth = rowItem.ratio * finalHeight;
+        rowItem.el.style.width = `${itemWidth}px`;
+        rowItem.el.style.height = `${finalHeight}px`;
+      });
+
+      // Bắt đầu hàng mới
+      currentRow = [];
+      currentRowWidth = 0;
     }
-  }
-  return colSpans;
-}
 
-/**
- * Đo chiều cao thực tế để chia dòng chính xác trong CSS Grid (grid-auto-rows: 10px)
- */
-function calculateMasonryRowSpans(container) {
-  const computedStyle = window.getComputedStyle(container);
-  const gap = parseInt(computedStyle.rowGap) || 16;
-  const rowHeight = 10;
-
-  const items = container.querySelectorAll('.mosaic-item');
-
-  items.forEach((item) => {
-    const imgEl = item.querySelector('img');
-    if (!imgEl) return;
-
-    const setSpan = () => {
-      const height = imgEl.getBoundingClientRect().height;
-      const rowSpan = Math.ceil((height + gap) / (rowHeight + gap));
-      item.style.gridRowEnd = `span ${rowSpan}`;
-    };
-
-    if (imgEl.complete) {
-      setSpan();
-    } else {
-      imgEl.addEventListener('load', setSpan);
-    }
+    currentRow.push({ ratio, el: itemElements[index] });
+    currentRowWidth += itemWidthAtTarget;
   });
+
+  // Xử lý hàng cuối cùng (không kéo căng để tránh ảnh bị phóng quá to)
+  if (currentRow.length > 0) {
+    currentRow.forEach((rowItem) => {
+      const itemWidth = rowItem.ratio * targetHeight;
+      rowItem.el.style.width = `${itemWidth}px`;
+      rowItem.el.style.height = `${targetHeight}px`;
+    });
+  }
 }
 
 /**
@@ -100,16 +103,12 @@ async function fetchProjectDetail(projectId) {
  */
 function renderMosaicGrid(images, container) {
   container.innerHTML = '';
-  const colSpans = calculateMasonryColSpans(images);
 
   images.forEach((img, index) => {
     const item = document.createElement('div');
     item.className = 'mosaic-item animate-fade-in';
     item.style.animationDelay = `${index * 40}ms`;
     item.dataset.index = index;
-
-    // Cấp phát cột theo kết quả ghép đôi
-    item.style.gridColumn = `span ${colSpans[index]}`;
 
     // Lấy tiêu đề dự án để làm SEO, lấy fallback từ biến toàn cục nếu chưa có
     const projectName = document.getElementById('project-title')?.textContent || 'Project';
@@ -121,6 +120,11 @@ function renderMosaicGrid(images, container) {
     item.addEventListener('click', () => openLightbox(images, index));
 
     container.appendChild(item);
+  });
+
+  // Calculate layout using RequestAnimationFrame to ensure container has width
+  requestAnimationFrame(() => {
+    layoutJustifiedGrid(images, container);
   });
 }
 
@@ -230,12 +234,13 @@ export async function initProjectPage() {
     if (grid && project.images.length > 0) {
       renderMosaicGrid(project.images, grid);
       
-      // Tính chiều cao sau khi render
-      calculateMasonryRowSpans(grid);
-      
-      // Lắng nghe resize để tính lại
+      // Lắng nghe resize với debounce để tránh giật lag
+      let resizeTimer;
       window.addEventListener('resize', () => {
-        calculateMasonryRowSpans(grid);
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          layoutJustifiedGrid(project.images, grid);
+        }, 100);
       });
       
     } else if (grid) {
