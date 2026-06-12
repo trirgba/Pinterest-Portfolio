@@ -316,22 +316,21 @@ async function renderProjectDetail(projectId) {
     animation: 200,
     ghostClass: 'sortable-ghost',
     chosenClass: 'sortable-chosen',
-    onEnd: async () => {
+    onEnd: () => {
       const items = imageGrid.querySelectorAll('.admin-image-item');
-      const batch = writeBatch(db);
-
       items.forEach((item, index) => {
-        const imgId = item.dataset.id;
-        const ref = doc(db, 'projects', projectId, 'images', imgId);
-        batch.update(ref, { order: index });
-        // Update badge
+        // Update badge visually
         item.querySelector('.order-badge').textContent = index;
       });
-
-      await batch.commit();
-      showToast('Đã cập nhật thứ tự ảnh', 'success');
+      // Show the save button
+      const saveBtn = document.getElementById('btn-save-order');
+      if (saveBtn) saveBtn.style.display = 'block';
     },
   });
+
+  // Hide save button initially
+  const saveBtn = document.getElementById('btn-save-order');
+  if (saveBtn) saveBtn.style.display = 'none';
 }
 
 function hideProjectDetail() {
@@ -464,6 +463,40 @@ export async function initAdminPage() {
   if (backToListBtn) {
     backToListBtn.addEventListener('click', () => {
       hideProjectDetail();
+    });
+  }
+
+  // Save order button
+  const saveOrderBtn = document.getElementById('btn-save-order');
+  if (saveOrderBtn) {
+    saveOrderBtn.addEventListener('click', async () => {
+      if (!selectedProjectId) return;
+      
+      const originalText = saveOrderBtn.textContent;
+      saveOrderBtn.textContent = 'Đang lưu...';
+      saveOrderBtn.disabled = true;
+
+      try {
+        const imageGrid = document.getElementById('admin-image-grid');
+        const items = imageGrid.querySelectorAll('.admin-image-item');
+        const batch = writeBatch(db);
+
+        items.forEach((item, index) => {
+          const imgId = item.dataset.id;
+          const ref = doc(db, 'projects', selectedProjectId, 'images', imgId);
+          batch.update(ref, { order: index });
+        });
+
+        await batch.commit();
+        showToast('Đã lưu bố cục ảnh', 'success');
+        saveOrderBtn.style.display = 'none';
+      } catch (error) {
+        console.error('Error saving order:', error);
+        showToast('Lỗi khi lưu bố cục', 'error');
+      } finally {
+        saveOrderBtn.textContent = originalText;
+        saveOrderBtn.disabled = false;
+      }
     });
   }
 
