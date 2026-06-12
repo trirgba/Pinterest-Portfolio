@@ -261,20 +261,19 @@
 
 /* Image grid in admin (for drag & drop) */
 .admin-image-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--global-gap, 16px);
   margin-top: 16px;
 }
 
 .admin-image-item {
   position: relative;
-  aspect-ratio: 1;
-  border-radius: 8px;
+  border-radius: var(--radius-card, 8px);
   overflow: hidden;
   border: 2px solid transparent;
   cursor: grab;
-  transition: all var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .admin-image-item:active {

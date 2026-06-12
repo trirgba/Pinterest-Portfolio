@@ -19,7 +19,7 @@ import { SITE_CONFIG } from '../config/seo.js';
 /**
  * Thuật toán Justified Image Grid (Phong cách Behance/Flickr)
  */
-function layoutJustifiedGrid(images, container) {
+export function layoutJustifiedGrid(images, container) {
   const containerWidth = container.clientWidth;
   if (!containerWidth) return;
 

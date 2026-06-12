@@ -16,9 +16,10 @@ import {
   writeBatch,
   serverTimestamp,
 } from 'firebase/firestore';
-import { uploadToCloudinary, deleteFromCloudinary } from '../cloudinary.js';
+import { uploadToCloudinary, deleteFromCloudinary, getOptimizedUrl } from '../cloudinary.js';
 import { getCurrentUser, logout, onAuthChange } from '../auth.js';
 import Sortable from 'sortablejs';
+import { layoutJustifiedGrid } from './project.js';
 
 let currentUser = null;
 let selectedProjectId = null;
@@ -285,6 +286,7 @@ async function renderProjectDetail(projectId) {
 
   const project = { id: projectId, ...projectSnap.data() };
   const images = await fetchImages(projectId);
+  let currentImages = [...images];
 
   document.getElementById('detail-project-name').textContent = project.name;
   document.getElementById('detail-image-count').textContent = `${images.length} ảnh`;
@@ -292,13 +294,13 @@ async function renderProjectDetail(projectId) {
   const imageGrid = document.getElementById('admin-image-grid');
   imageGrid.innerHTML = '';
 
-  images.forEach((img, index) => {
+  currentImages.forEach((img, index) => {
     const item = document.createElement('div');
     item.className = 'admin-image-item';
     item.dataset.id = img.id;
     item.innerHTML = `
-      <img src="${img.url}" alt="Image ${index + 1}" loading="lazy">
-      <span class="order-badge">${index}</span>
+      <img src="${getOptimizedUrl(img.cloudinaryId, { width: 800 })}" alt="Image ${index + 1}" loading="lazy">
+      <span class="order-badge">${index + 1}</span>
       <button class="delete-btn" title="Xoá ảnh">✕</button>
     `;
 
@@ -310,6 +312,21 @@ async function renderProjectDetail(projectId) {
     imageGrid.appendChild(item);
   });
 
+  // Lần đầu render layout
+  requestAnimationFrame(() => {
+    layoutJustifiedGrid(currentImages, imageGrid);
+  });
+
+  // Window resize listener để update layout
+  const resizeHandler = () => {
+    layoutJustifiedGrid(currentImages, imageGrid);
+  };
+  if (imageGrid._resizeHandler) {
+    window.removeEventListener('resize', imageGrid._resizeHandler);
+  }
+  window.addEventListener('resize', resizeHandler);
+  imageGrid._resizeHandler = resizeHandler;
+
   // Init SortableJS — Spec Section 7
   if (imageGrid._sortable) imageGrid._sortable.destroy();
   imageGrid._sortable = Sortable.create(imageGrid, {
@@ -318,10 +335,18 @@ async function renderProjectDetail(projectId) {
     chosenClass: 'sortable-chosen',
     onEnd: () => {
       const items = imageGrid.querySelectorAll('.admin-image-item');
+      const newImages = [];
       items.forEach((item, index) => {
         // Update badge visually
-        item.querySelector('.order-badge').textContent = index;
+        item.querySelector('.order-badge').textContent = index + 1;
+        // Rebuild the order array for layout justification
+        newImages.push(currentImages.find(i => i.id === item.dataset.id));
       });
+      currentImages = newImages;
+
+      // Re-layout immediately after drop to match the original final view
+      layoutJustifiedGrid(currentImages, imageGrid);
+
       // Show the save button
       const saveBtn = document.getElementById('btn-save-order');
       if (saveBtn) saveBtn.style.display = 'block';
