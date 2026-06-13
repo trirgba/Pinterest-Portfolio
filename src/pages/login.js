@@ -49,11 +49,21 @@ export async function initLoginPage() {
       // Khoá 3 ngày
       status.lockedUntil = Date.now() + 3 * 24 * 60 * 60 * 1000;
       
+      // Fetch IP
+      let ipStr = 'Unknown IP';
+      try {
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        ipStr = ipData.ip;
+      } catch (err) {
+        console.warn('Could not fetch IP', err);
+      }
+
       // Bắn log lên Firestore
       try {
         await addDoc(collection(db, 'login_alerts'), {
           userAgent: navigator.userAgent,
-          platform: navigator.platform || 'Unknown',
+          ip: ipStr,
           timestamp: serverTimestamp(),
           isRead: false,
           type: 'failed_passcode'

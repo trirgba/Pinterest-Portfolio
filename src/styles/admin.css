@@ -669,24 +669,6 @@
   background: #fef2f2;
 }
 
-.admin-profile-btn {
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: var(--color-text);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg);
-  transition: background var(--transition-fast);
-}
-.admin-profile-btn:hover {
-  background: var(--color-border);
-}
 
 /* Admin Modals */
 .admin-section h3 {

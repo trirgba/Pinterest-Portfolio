@@ -227,7 +227,11 @@ async function renderProjectList() {
     if (projects.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="icon">📁</div>
+          <div class="icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder">
+              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+            </svg>
+          </div>
           <h3>Chưa có project</h3>
           <p>Bấm "Tạo project" để bắt đầu.</p>
         </div>
@@ -240,7 +244,11 @@ async function renderProjectList() {
       card.className = 'project-card-admin animate-fade-in';
       card.innerHTML = `
         <div class="project-card-admin-thumb">
-          <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--color-text-subtle); font-size: 32px;">📁</div>
+          <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--color-text-subtle);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder">
+              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+            </svg>
+          </div>
         </div>
         <div class="project-card-admin-body">
           <h3>${project.name}</h3>
@@ -248,7 +256,11 @@ async function renderProjectList() {
         </div>
         <div class="project-card-admin-actions">
           <button class="btn-secondary btn-sm view-btn" data-id="${project.id}">Xem & Quản lý</button>
-          <button class="btn-icon danger delete-btn" data-id="${project.id}" title="Xoá project">🗑️</button>
+          <button class="btn-icon danger delete-btn" data-id="${project.id}" title="Xoá project">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2">
+              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+            </svg>
+          </button>
         </div>
       `;
 
@@ -267,7 +279,11 @@ async function renderProjectList() {
     console.error('Error loading projects:', error);
     container.innerHTML = `
       <div class="empty-state">
-        <div class="icon">⚠️</div>
+        <div class="icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+          </svg>
+        </div>
         <h3>Lỗi tải dữ liệu</h3>
         <p>${error.message}</p>
       </div>
@@ -513,7 +529,8 @@ function setupNotifications() {
         <div class="notification-item ${isUnreadClass}" data-id="${docSnap.id}">
           <strong style="color: var(--color-danger);">Cảnh báo bảo mật</strong>
           <span>Có thiết bị nhập sai Admin Code quá 3 lần.</span>
-          <span style="color: var(--color-text-muted); font-size: 12px;">OS: ${data.platform || 'Unknown'}</span>
+          <span style="color: var(--color-text-muted); font-size: 11px;">IP: ${data.ip || 'Không rõ'}</span>
+          <span style="color: var(--color-text-muted); font-size: 11px;">${data.userAgent || 'Unknown'}</span>
           <span style="color: var(--color-text-subtle); font-size: 11px;">${timeStr}</span>
         </div>
       `;
@@ -552,7 +569,11 @@ async function setupAdminProfile() {
       listEl.innerHTML += `
         <li>
           <span>${email}</span>
-          <button type="button" class="btn-icon danger btn-sm delete-email-btn" data-email="${email}">🗑️</button>
+          <button type="button" class="btn-icon danger btn-sm delete-email-btn" data-email="${email}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2">
+              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
+            </svg>
+          </button>
         </li>
       `;
     });
