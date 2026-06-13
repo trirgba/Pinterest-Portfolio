@@ -290,18 +290,7 @@
   border-color: var(--color-text-subtle);
 }
 
-.project-card-admin-thumb {
-  aspect-ratio: 16 / 9;
-  background: var(--color-bg);
-  position: relative;
-  overflow: hidden;
-}
 
-.project-card-admin-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 .project-card-admin-body {
   padding: 16px;

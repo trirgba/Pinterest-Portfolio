@@ -251,7 +251,7 @@ button {
   grid-template-columns: 2fr 1fr;
   grid-template-rows: 1fr 1fr;
   aspect-ratio: 3 / 2;
-  gap: 4px;
+  gap: 3px;
   overflow: hidden;
   border-radius: var(--radius-card);
   transition: box-shadow var(--transition-fast);

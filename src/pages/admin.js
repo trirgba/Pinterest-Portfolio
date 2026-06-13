@@ -57,7 +57,30 @@ function showToast(message, type = 'info') {
 async function fetchProjects() {
   const q = query(collection(db, 'projects'), orderBy('order', 'asc'));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const projects = [];
+
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    // Fetch top 3 images to match .project-thumb
+    const imagesQuery = query(
+      collection(db, 'projects', doc.id, 'images'),
+      orderBy('order', 'asc'),
+      limit(3)
+    );
+    const imagesSnap = await getDocs(imagesQuery);
+    const images = imagesSnap.docs.map((imgDoc) => ({
+      id: imgDoc.id,
+      ...imgDoc.data(),
+    }));
+
+    projects.push({
+      id: doc.id,
+      ...data,
+      images,
+    });
+  }
+
+  return projects;
 }
 
 /**
@@ -255,12 +278,17 @@ async function renderProjectList() {
     projects.forEach((project) => {
       const card = document.createElement('div');
       card.className = 'project-card-admin animate-fade-in';
+      const [img1, img2, img3] = project.images || [];
       card.innerHTML = `
-        <div class="project-card-admin-thumb">
-          <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--color-text-subtle);">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder">
-              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
-            </svg>
+        <div class="project-thumb">
+          <div class="thumb-img-large">
+            ${img1 ? `<img src="${getOptimizedUrl(img1.cloudinaryId, { width: 800 })}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
+          </div>
+          <div class="thumb-img">
+            ${img2 ? `<img src="${getOptimizedUrl(img2.cloudinaryId, { width: 400 })}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
+          </div>
+          <div class="thumb-img">
+            ${img3 ? `<img src="${getOptimizedUrl(img3.cloudinaryId, { width: 400 })}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
           </div>
         </div>
         <div class="project-card-admin-body">
