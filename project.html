@@ -12,16 +12,26 @@
 <body>
   <!-- Header -->
   <header class="site-header">
-    <div class="container" style="display: flex; align-items: center; gap: 16px;">
+    <div class="container" style="display: flex; align-items: center; position: relative; min-height: 40px;">
+      <!-- Left: Back button -->
       <a href="/" id="back-btn" class="back-btn" aria-label="Quay lại">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
       </a>
-      <div>
-        <h1 id="project-title" class="project-detail-title">Đang tải...</h1>
-        <span id="project-count" class="project-detail-count"></span>
+
+      <!-- Center: Title & Count -->
+      <div style="position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; white-space: nowrap; font-size: 16px; font-weight: 500;">
+        <h1 id="project-title" class="project-detail-title" style="margin: 0; font-size: inherit; font-weight: inherit;">Đang tải...</h1>
+        <span id="project-count" class="project-detail-count" style="color: var(--color-text-muted); font-weight: 400; margin-left: 6px;"></span>
       </div>
+
+      <!-- Right: Edit button (Admin only) -->
+      <a href="#" id="edit-project-btn" class="back-btn" aria-label="Chỉnh sửa" style="display: none; margin-left: auto;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+      </a>
     </div>
   </header>
 

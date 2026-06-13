@@ -43,6 +43,7 @@ async function fetchProjects() {
     projects.push({
       id: doc.id,
       name: data.name,
+      slug: data.slug,
       order: data.order,
       imageCount: data.imageCount || images.length,
       images,
@@ -56,8 +57,9 @@ async function fetchProjects() {
  * Render một project card với thumbnail 3:2
  */
 function renderProjectCard(project) {
+  const urlParam = project.slug ? `slug=${project.slug}` : `id=${project.id}`;
   const card = document.createElement('a');
-  card.href = `/project.html?id=${project.id}`;
+  card.href = `/project.html?${urlParam}`;
   card.className = 'project-card animate-fade-in';
   card.style.animationDelay = `${project.order * 60}ms`;
 

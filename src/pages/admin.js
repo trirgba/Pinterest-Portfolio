@@ -61,14 +61,27 @@ async function fetchProjects() {
 }
 
 /**
+ * Helper để tạo slug từ tên project
+ */
+function createSlug(str) {
+  return str.normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+}
+
+/**
  * Create new project
  */
 async function createProject(name) {
   const projects = await fetchProjects();
   const order = projects.length;
+  const slug = createSlug(name);
 
   await addDoc(collection(db, 'projects'), {
     name,
+    slug,
     order,
     createdAt: serverTimestamp(),
   });
@@ -265,8 +278,7 @@ async function renderProjectList() {
       `;
 
       card.querySelector('.view-btn').addEventListener('click', () => {
-        selectedProjectId = project.id;
-        renderProjectDetail(project.id);
+        window.open(`/admin/dashboard.html?edit=${project.id}`, '_blank');
       });
 
       card.querySelector('.delete-btn').addEventListener('click', () => {
@@ -308,6 +320,43 @@ async function renderProjectDetail(projectId) {
   let currentImages = [...images];
 
   document.getElementById('detail-project-name').textContent = project.name;
+  
+  const slugInput = document.getElementById('detail-project-slug');
+  const saveSlugBtn = document.getElementById('btn-save-slug');
+  slugInput.value = project.slug || project.id;
+  saveSlugBtn.style.display = 'none';
+
+  slugInput.oninput = () => {
+    saveSlugBtn.style.display = (slugInput.value.trim() !== (project.slug || project.id)) ? 'block' : 'none';
+  };
+
+  saveSlugBtn.onclick = async () => {
+    const newSlug = slugInput.value.trim();
+    if (!newSlug) return;
+    
+    // Validate slug (no spaces, lowercase)
+    const validSlug = createSlug(newSlug);
+    if (newSlug !== validSlug) {
+      showToast('Slug đã được tự động chuẩn hoá (xóa dấu, khoảng trắng)', 'info');
+      slugInput.value = validSlug;
+    }
+
+    try {
+      saveSlugBtn.textContent = 'Đang lưu...';
+      saveSlugBtn.disabled = true;
+      await updateDoc(doc(db, 'projects', projectId), { slug: validSlug });
+      project.slug = validSlug;
+      showToast('Đã lưu Slug thành công', 'success');
+      saveSlugBtn.style.display = 'none';
+    } catch (err) {
+      console.error(err);
+      showToast('Lỗi khi lưu Slug', 'error');
+    } finally {
+      saveSlugBtn.textContent = 'Lưu Slug';
+      saveSlugBtn.disabled = false;
+    }
+  };
+
   document.getElementById('detail-image-count').textContent = `${images.length} ảnh`;
 
   const imageGrid = document.getElementById('admin-image-grid');
@@ -380,6 +429,12 @@ async function renderProjectDetail(projectId) {
 function hideProjectDetail() {
   const detailSection = document.getElementById('project-detail');
   if (detailSection) detailSection.style.display = 'none';
+  
+  // If we are in edit mode, hiding it should probably go back to list, but there is no list.
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('edit')) {
+    window.location.href = '/admin/dashboard.html';
+  }
 }
 
 // ==========================================
@@ -731,11 +786,21 @@ export async function initAdminPage() {
   }
 
   // Back to list button
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get('edit');
+  
   const backToListBtn = document.getElementById('btn-back-to-list');
   if (backToListBtn) {
-    backToListBtn.addEventListener('click', () => {
-      hideProjectDetail();
-    });
+    if (editId) {
+      backToListBtn.textContent = '← Đóng';
+      backToListBtn.addEventListener('click', () => {
+        window.close();
+      });
+    } else {
+      backToListBtn.addEventListener('click', () => {
+        hideProjectDetail();
+      });
+    }
   }
 
   // Save order button
@@ -776,5 +841,16 @@ export async function initAdminPage() {
   setupUpload();
   setupNotifications();
   setupAdminProfile();
-  await renderProjectList();
+  
+  if (editId) {
+    const toolbar = document.querySelector('.admin-toolbar');
+    const projectList = document.getElementById('project-list');
+    if (toolbar) toolbar.style.display = 'none';
+    if (projectList) projectList.style.display = 'none';
+    
+    selectedProjectId = editId;
+    await renderProjectDetail(editId);
+  } else {
+    await renderProjectList();
+  }
 }

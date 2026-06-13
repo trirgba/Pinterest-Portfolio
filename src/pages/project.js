@@ -11,9 +11,12 @@ import {
   getDocs,
   query,
   orderBy,
+  where,
+  limit,
 } from 'firebase/firestore';
 import { getOptimizedUrl } from '../cloudinary.js';
 import { SITE_CONFIG } from '../config/seo.js';
+import { getCurrentUser } from '../auth.js';
 
 
 /**
@@ -71,12 +74,25 @@ export function layoutJustifiedGrid(images, container) {
 /**
  * Fetch project info + tất cả images
  */
-async function fetchProjectDetail(projectId) {
-  const projectRef = doc(db, 'projects', projectId);
-  const projectSnap = await getDoc(projectRef);
+async function fetchProjectDetail(projectIdOrSlug) {
+  let projectSnap = null;
+  let projectId = projectIdOrSlug;
 
-  if (!projectSnap.exists()) {
-    throw new Error('Project không tồn tại');
+  try {
+    projectSnap = await getDoc(doc(db, 'projects', projectIdOrSlug));
+  } catch (e) {
+    // Ignore invalid doc id errors
+  }
+
+  if (!projectSnap || !projectSnap.exists()) {
+    const q = query(collection(db, 'projects'), where('slug', '==', projectIdOrSlug), limit(1));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      projectSnap = snap.docs[0];
+      projectId = projectSnap.id;
+    } else {
+      throw new Error('Project không tồn tại');
+    }
   }
 
   const projectData = projectSnap.data();
@@ -184,9 +200,9 @@ function renderMosaicSkeletons(container) {
  */
 export async function initProjectPage() {
   const params = new URLSearchParams(window.location.search);
-  const projectId = params.get('id');
+  const projectIdOrSlug = params.get('slug') || params.get('id');
 
-  if (!projectId) {
+  if (!projectIdOrSlug) {
     window.location.href = '/';
     return;
   }
@@ -226,10 +242,19 @@ export async function initProjectPage() {
   }
 
   try {
-    const project = await fetchProjectDetail(projectId);
+    const project = await fetchProjectDetail(projectIdOrSlug);
 
     if (titleEl) titleEl.textContent = project.name;
-    if (countEl) countEl.textContent = `${project.images.length} ảnh`;
+    if (countEl) countEl.textContent = `/ ${project.images.length} ảnh`;
+
+    // Check admin and show edit button
+    const user = await getCurrentUser();
+    const editBtn = document.getElementById('edit-project-btn');
+    if (user && editBtn) {
+      editBtn.style.display = 'flex';
+      editBtn.href = `/admin/dashboard.html?edit=${project.id}`;
+      editBtn.target = '_blank';
+    }
 
     if (grid && project.images.length > 0) {
       renderMosaicGrid(project.images, grid);
