@@ -20,8 +20,36 @@
         </a>
         <h1>Admin Dashboard</h1>
       </div>
-      <div style="display: flex; align-items: center; gap: 16px;">
-        <div id="admin-user-info" class="admin-user-info"></div>
+      <div style="display: flex; align-items: center; gap: 16px; position: relative;">
+        <!-- Notification Bell -->
+        <div class="admin-notifications">
+          <button id="btn-notifications" class="btn-icon" style="position: relative;" title="Thông báo bảo mật">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span id="notification-badge" class="badge-dot" style="display: none;"></span>
+          </button>
+          
+          <div id="notification-popup" class="notification-popup">
+            <div class="popup-header">
+              <h3>Thông báo bảo mật</h3>
+            </div>
+            <div id="notification-list" class="notification-list">
+              <div style="padding: 16px; text-align: center; color: var(--color-text-muted); font-size: 13px;">Chưa có thông báo nào</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Profile -->
+        <button id="btn-admin-profile" class="admin-profile-btn" title="Quản lý Admin">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M12 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+            <path d="M15.5 17c-1-1.5-2-2-3.5-2s-2.5.5-3.5 2"/>
+          </svg>
+        </button>
+
         <button id="btn-logout" class="btn-secondary btn-sm">Đăng xuất</button>
       </div>
     </div>
@@ -84,6 +112,46 @@
           <button type="submit" class="btn-primary">Tạo</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Admin Profile -->
+  <div id="modal-admin-profile" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="margin: 0;">Quản lý tài khoản Admin</h2>
+        <button class="btn-icon modal-close-profile">✕</button>
+      </div>
+
+      <div class="admin-section">
+        <h3>Thay đổi Admin Code</h3>
+        <form id="form-change-code">
+          <div class="form-group">
+            <input type="password" id="input-old-code" placeholder="Code hiện tại" required>
+          </div>
+          <div class="form-group" style="display: flex; gap: 8px;">
+            <input type="password" id="input-new-code" placeholder="Code mới" required style="flex: 1;">
+            <button type="submit" class="btn-primary btn-sm">Lưu</button>
+          </div>
+          <div id="code-msg" style="font-size: 13px; margin-top: 4px;"></div>
+        </form>
+      </div>
+
+      <div class="admin-section" style="margin-top: 32px;">
+        <h3>Danh sách Email (Google Auth) được phép</h3>
+        <ul id="allowed-emails-list" class="email-list"></ul>
+        <form id="form-add-email" style="display: flex; gap: 8px; margin-top: 12px;">
+          <input type="email" id="input-new-email" placeholder="Thêm email mới..." required style="flex: 1; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 8px; outline: none; font-family: inherit;">
+          <button type="submit" class="btn-secondary btn-sm">Thêm</button>
+        </form>
+      </div>
+
+      <div class="admin-section" style="margin-top: 32px;">
+        <h3>Lịch sử đăng nhập</h3>
+        <div id="admin-login-history" class="history-list">
+          <!-- list -->
+        </div>
+      </div>
     </div>
   </div>
 

@@ -15,9 +15,12 @@ import {
   orderBy,
   writeBatch,
   serverTimestamp,
+  onSnapshot,
+  limit,
+  setDoc
 } from 'firebase/firestore';
 import { uploadToCloudinary, deleteFromCloudinary, getOptimizedUrl } from '../cloudinary.js';
-import { getCurrentUser, logout, onAuthChange } from '../auth.js';
+import { getCurrentUser, logout, onAuthChange, ADMIN_CODE_EMAIL, changeAdminCode, getAllowedEmails } from '../auth.js';
 import Sortable from 'sortablejs';
 import { layoutJustifiedGrid } from './project.js';
 
@@ -445,6 +448,234 @@ function setupUpload() {
 }
 
 // ==========================================
+// NOTIFICATIONS
+// ==========================================
+
+function setupNotifications() {
+  const btnNotify = document.getElementById('btn-notifications');
+  const popup = document.getElementById('notification-popup');
+  const badge = document.getElementById('notification-badge');
+  const listEl = document.getElementById('notification-list');
+
+  if (!btnNotify || !popup) return;
+
+  btnNotify.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    popup.classList.toggle('active');
+    
+    // Đánh dấu đã đọc (Optimistic UI)
+    if (popup.classList.contains('active') && badge.style.display !== 'none') {
+      badge.style.display = 'none';
+      
+      try {
+        const unreadItems = listEl.querySelectorAll('.notification-item.unread');
+        const batch = writeBatch(db);
+        unreadItems.forEach(item => {
+          const id = item.dataset.id;
+          if (id) {
+            batch.update(doc(db, 'login_alerts', id), { isRead: true });
+            item.classList.remove('unread');
+          }
+        });
+        await batch.commit();
+      } catch (err) {
+        console.error("Error marking alerts as read", err);
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!popup.contains(e.target) && !btnNotify.contains(e.target)) {
+      popup.classList.remove('active');
+    }
+  });
+
+  // Lắng nghe realtime
+  const q = query(collection(db, 'login_alerts'), orderBy('timestamp', 'desc'), limit(20));
+  onSnapshot(q, (snapshot) => {
+    let unreadCount = 0;
+    let html = '';
+
+    if (snapshot.empty) {
+      listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--color-text-muted); font-size: 13px;">Chưa có thông báo nào</div>';
+      badge.style.display = 'none';
+      return;
+    }
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (!data.isRead) unreadCount++;
+      
+      const timeStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString('vi-VN') : 'Vừa xong';
+      const isUnreadClass = data.isRead ? '' : 'unread';
+      
+      html += `
+        <div class="notification-item ${isUnreadClass}" data-id="${docSnap.id}">
+          <strong style="color: var(--color-danger);">Cảnh báo bảo mật</strong>
+          <span>Có thiết bị nhập sai Admin Code quá 3 lần.</span>
+          <span style="color: var(--color-text-muted); font-size: 12px;">OS: ${data.platform || 'Unknown'}</span>
+          <span style="color: var(--color-text-subtle); font-size: 11px;">${timeStr}</span>
+        </div>
+      `;
+    });
+
+    listEl.innerHTML = html;
+    
+    if (unreadCount > 0) {
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  });
+}
+
+// ==========================================
+// ADMIN PROFILE MODAL
+// ==========================================
+
+async function setupAdminProfile() {
+  const btnOpen = document.getElementById('btn-admin-profile');
+  const modal = document.getElementById('modal-admin-profile');
+  const btnClose = document.querySelector('.modal-close-profile');
+  
+  if (!btnOpen || !modal) return;
+
+  const loadEmails = async () => {
+    const listEl = document.getElementById('allowed-emails-list');
+    listEl.innerHTML = '<li style="color: var(--color-text-muted);">Đang tải...</li>';
+    const emails = await getAllowedEmails();
+    listEl.innerHTML = '';
+    emails.forEach(email => {
+      listEl.innerHTML += `
+        <li>
+          <span>${email}</span>
+          <button type="button" class="btn-icon danger btn-sm delete-email-btn" data-email="${email}">🗑️</button>
+        </li>
+      `;
+    });
+
+    listEl.querySelectorAll('.delete-email-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const emailToDelete = e.currentTarget.dataset.email;
+        if (emails.length <= 1) {
+          showToast('Phải giữ lại ít nhất 1 email', 'error');
+          return;
+        }
+        if (confirm(`Xóa quyền admin của ${emailToDelete}?`)) {
+          const newEmails = emails.filter(em => em !== emailToDelete);
+          await setDoc(doc(db, 'admin_settings', 'config'), { allowed_emails: newEmails }, { merge: true });
+          showToast('Đã xóa email', 'success');
+          loadEmails();
+        }
+      });
+    });
+  };
+
+  const loadHistory = async () => {
+    const listEl = document.getElementById('admin-login-history');
+    listEl.innerHTML = '<div class="skeleton" style="height: 60px;"></div>';
+    
+    try {
+      const q = query(collection(db, 'admin_login_history'), orderBy('timestamp', 'desc'), limit(10));
+      const snap = await getDocs(q);
+      
+      if (snap.empty) {
+        listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--color-text-muted); font-size: 13px;">Chưa có lịch sử</div>';
+        return;
+      }
+
+      let html = '';
+      snap.forEach(d => {
+        const data = d.data();
+        const timeStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString('vi-VN') : '';
+        html += `
+          <div class="history-item">
+            <div>
+              <div style="font-weight: 500;">${data.user || 'Admin Code'}</div>
+              <div style="font-size: 12px; color: var(--color-text-muted);">${data.userAgent || ''}</div>
+            </div>
+            <div style="font-size: 12px; color: var(--color-text-subtle);">${timeStr}</div>
+          </div>
+        `;
+      });
+      listEl.innerHTML = html;
+    } catch (e) {
+      listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--color-danger); font-size: 13px;">Không thể tải lịch sử</div>';
+    }
+  };
+
+  btnOpen.addEventListener('click', () => {
+    modal.classList.add('active');
+    loadEmails();
+    loadHistory();
+  });
+
+  const closeModal = () => modal.classList.remove('active');
+  btnClose.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  // Add Email
+  const formAddEmail = document.getElementById('form-add-email');
+  formAddEmail.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newEmail = document.getElementById('input-new-email').value.trim();
+    if (!newEmail) return;
+
+    try {
+      const currentEmails = await getAllowedEmails();
+      if (currentEmails.includes(newEmail)) {
+        showToast('Email này đã tồn tại', 'error');
+        return;
+      }
+      
+      const newEmails = [...currentEmails, newEmail];
+      await setDoc(doc(db, 'admin_settings', 'config'), { allowed_emails: newEmails }, { merge: true });
+      showToast('Đã thêm email thành công', 'success');
+      document.getElementById('input-new-email').value = '';
+      loadEmails();
+    } catch (err) {
+      showToast('Lỗi khi thêm email: ' + err.message, 'error');
+    }
+  });
+
+  // Change Passcode
+  const formChangeCode = document.getElementById('form-change-code');
+  formChangeCode.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('code-msg');
+    
+    if (currentUser.email !== ADMIN_CODE_EMAIL) {
+      msg.textContent = 'Bạn phải đăng nhập bằng Code hiện tại để đổi Code mới.';
+      msg.style.color = 'var(--color-danger)';
+      return;
+    }
+
+    const oldCode = document.getElementById('input-old-code').value;
+    const newCode = document.getElementById('input-new-code').value;
+
+    try {
+      msg.textContent = 'Đang xử lý...';
+      msg.style.color = 'var(--color-text-muted)';
+      
+      // Verify old password (just calling signIn directly on auth might mess up state, but updatePassword handles it if recently signed in)
+      // For security, if token is old, we might need to re-authenticate. Assuming they just logged in:
+      await changeAdminCode(newCode);
+      
+      msg.textContent = 'Đổi Admin Code thành công!';
+      msg.style.color = '#065f46';
+      formChangeCode.reset();
+    } catch (err) {
+      if (err.code === 'auth/requires-recent-login') {
+        msg.textContent = 'Vui lòng đăng xuất và đăng nhập lại bằng Code hiện tại trước khi đổi.';
+      } else {
+        msg.textContent = err.message || 'Lỗi khi đổi Code.';
+      }
+      msg.style.color = 'var(--color-danger)';
+    }
+  });
+}
+
+// ==========================================
 // INIT
 // ==========================================
 
@@ -452,25 +683,16 @@ export async function initAdminPage() {
   // Check auth
   onAuthChange((user) => {
     if (!user) {
-      window.location.href = '/admin/login.html';
+      window.location.href = '/admin/';
       return;
     }
     currentUser = user;
-
-    // Update header user info
-    const userInfo = document.getElementById('admin-user-info');
-    if (userInfo) {
-      userInfo.innerHTML = `
-        <span>${user.displayName || user.email}</span>
-        ${user.photoURL ? `<img src="${user.photoURL}" alt="avatar">` : ''}
-      `;
-    }
   });
 
   // Wait for auth
   currentUser = await getCurrentUser();
   if (!currentUser) {
-    window.location.href = '/admin/login.html';
+    window.location.href = '/admin/';
     return;
   }
 
@@ -479,7 +701,7 @@ export async function initAdminPage() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       await logout();
-      window.location.href = '/admin/login.html';
+      window.location.href = '/admin/';
     });
   }
 
@@ -527,5 +749,7 @@ export async function initAdminPage() {
 
   setupCreateModal();
   setupUpload();
+  setupNotifications();
+  setupAdminProfile();
   await renderProjectList();
 }

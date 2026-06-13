@@ -10,8 +10,9 @@ export default defineConfig({
       input: {
         main: 'index.html',
         project: 'project.html',
-        adminLogin: 'admin/login.html',
+        adminLogin: 'admin/index.html',
         adminDashboard: 'admin/dashboard.html',
+        ad: 'ad/index.html',
       },
     },
   },

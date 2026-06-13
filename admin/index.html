@@ -14,6 +14,20 @@
       <h1>Đăng nhập Admin</h1>
       <p>Chỉ những email được cho phép mới có thể truy cập.</p>
       
+      <div class="admin-code-group">
+        <input type="password" id="input-admin-code" placeholder="Nhập Admin Code..." autocomplete="off">
+        <button id="btn-code-login" class="btn-code-enter" title="Đăng nhập">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 10 4 15 9 20"></polyline>
+            <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="login-divider">
+        <span>Hoặc</span>
+      </div>
+
       <button id="btn-google-login" class="btn-google">
         <svg viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -31,27 +45,8 @@
   <script type="module">
     import '../src/styles/main.css';
     import '../src/styles/admin.css';
-    import { loginWithGoogle, getCurrentUser } from '../src/auth.js';
-
-    // Nếu đã login → redirect
-    const user = await getCurrentUser();
-    if (user) {
-      window.location.href = '/admin/dashboard.html';
-    }
-
-    const btn = document.getElementById('btn-google-login');
-    const errorDiv = document.getElementById('login-error');
-
-    btn.addEventListener('click', async () => {
-      try {
-        errorDiv.style.display = 'none';
-        await loginWithGoogle();
-        window.location.href = '/admin/dashboard.html';
-      } catch (error) {
-        errorDiv.textContent = error.message;
-        errorDiv.style.display = 'block';
-      }
-    });
+    import { initLoginPage } from '../src/pages/login.js';
+    initLoginPage();
   </script>
 </body>
 </html>

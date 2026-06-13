@@ -1,16 +1,37 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // Cho phép mọi người có thể xem danh sách project và ảnh
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == "admin_account@portfolio.local" ||
+        (exists(/databases/$(database)/documents/admin_settings/config) &&
+         request.auth.token.email in get(/databases/$(database)/documents/admin_settings/config).data.get('allowed_emails', [])) ||
+        request.auth.token.email in ["mintri.arena@gmail.com", "trixinchao@gmail.com"]
+      );
+    }
+
+    match /projects/{projectId} {
       allow read: if true;
+      allow write: if isAdmin();
       
-      // Chỉ cho phép thao tác thêm, sửa, xoá đối với 2 email quản trị viên
-      allow write: if request.auth != null &&
-        request.auth.token.email in [
-          "mintri.arena@gmail.com",
-          "trixinchao@gmail.com"
-        ];
+      match /images/{imageId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    match /admin_settings/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /admin_login_history/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /login_alerts/{alertId} {
+      // Allow unauthenticated creation for reporting failed logins
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
     }
   }
 }
