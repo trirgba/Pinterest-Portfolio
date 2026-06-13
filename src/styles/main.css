@@ -158,10 +158,10 @@ button {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff99;
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #ffffff99;
   padding: 8px 0;
   min-height: 56px;
 }
@@ -320,6 +320,6 @@ button {
 }
 
 .project-detail-count {
-  font-size: 14px;
-  color: var(--color-text-muted);
+  font-size: inherit;
+  color: #111111;
 }
