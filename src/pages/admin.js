@@ -526,6 +526,9 @@ function setupNotifications() {
     } else {
       badge.style.display = 'none';
     }
+  }, (error) => {
+    console.error("Lỗi khi tải thông báo:", error);
+    listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--color-danger); font-size: 13px;">Lỗi tải thông báo: ' + error.message + '</div>';
   });
 }
 
@@ -600,7 +603,8 @@ async function setupAdminProfile() {
       });
       listEl.innerHTML = html;
     } catch (e) {
-      listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--color-danger); font-size: 13px;">Không thể tải lịch sử</div>';
+      console.error("Lỗi tải lịch sử:", e);
+      listEl.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--color-danger); font-size: 13px;">Không thể tải lịch sử: ' + e.message + '</div>';
     }
   };
 

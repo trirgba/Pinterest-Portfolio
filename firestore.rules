@@ -4,9 +4,9 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null && (
         request.auth.token.email == "admin_account@portfolio.local" ||
+        request.auth.token.email in ["mintri.arena@gmail.com", "trixinchao@gmail.com"] ||
         (exists(/databases/$(database)/documents/admin_settings/config) &&
-         request.auth.token.email in get(/databases/$(database)/documents/admin_settings/config).data.get('allowed_emails', [])) ||
-        request.auth.token.email in ["mintri.arena@gmail.com", "trixinchao@gmail.com"]
+         request.auth.token.email in get(/databases/$(database)/documents/admin_settings/config).data.allowed_emails)
       );
     }
 
