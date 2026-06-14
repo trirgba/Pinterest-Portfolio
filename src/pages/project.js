@@ -157,6 +157,12 @@ function openLightbox(images, index) {
   const overlay = document.getElementById('lightbox');
   const img = overlay.querySelector('img');
 
+  // Reset animation để zoom-in chạy lại mỗi lần mở
+  img.style.animation = 'none';
+  // Force reflow
+  void img.offsetHeight;
+  img.style.animation = '';
+
   // Lightbox dùng ảnh to hơn nhưng vẫn ép sang WebP
   img.src = getOptimizedUrl(images[index].cloudinaryId, { width: 1600 });
   overlay.classList.add('active');
@@ -165,8 +171,11 @@ function openLightbox(images, index) {
 
 function closeLightbox() {
   const overlay = document.getElementById('lightbox');
+  const img = overlay.querySelector('img');
   overlay.classList.remove('active');
   document.body.style.overflow = '';
+  // Xoá src để tránh flash ảnh cũ khi mở lại
+  img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 }
 
 function navigateLightbox(direction) {
