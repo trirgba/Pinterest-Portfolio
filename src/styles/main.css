@@ -175,6 +175,8 @@ button {
 }
 
 .site-logo {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.03em;
