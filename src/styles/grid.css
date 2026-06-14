@@ -46,13 +46,13 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: #fff9;
+  background: rgba(255, 255, 255, 0.6);
   display: none;
   align-items: center;
   justify-content: center;
   cursor: zoom-out;
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 .lightbox-overlay.active {
