@@ -12,6 +12,7 @@ export const SITE_CONFIG = {
   role: "Designer",
   title: "Trí Xin Chào Portfolio",
   description: "Portfolio nhiếp ảnh và thiết kế của Designer Nguyễn Minh Trí (Trí Xin Chào). Khám phá các dự án sáng tạo và bộ sưu tập nghệ thuật.",
+  googleAnalyticsId: "G-9VMLRBGTGF", // Điền mã đo lường Google Analytics của bạn vào đây (vd: "G-XXXXXXXXXX")
 };
 
 /**
@@ -52,4 +53,21 @@ export function injectSEO() {
   metaDesc.name = 'description';
   metaDesc.content = SITE_CONFIG.description;
   document.head.appendChild(metaDesc);
+
+  // Inject Google Analytics (chỉ chạy nếu có mã ID)
+  if (SITE_CONFIG.googleAnalyticsId) {
+    const gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${SITE_CONFIG.googleAnalyticsId}`;
+    document.head.appendChild(gtagScript);
+
+    const inlineScript = document.createElement('script');
+    inlineScript.text = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${SITE_CONFIG.googleAnalyticsId}');
+    `;
+    document.head.appendChild(inlineScript);
+  }
 }
