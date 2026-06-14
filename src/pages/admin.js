@@ -23,6 +23,9 @@ import { uploadToCloudinary, deleteFromCloudinary, getOptimizedUrl } from '../cl
 import { getCurrentUser, logout, onAuthChange, ADMIN_CODE_EMAIL, changeAdminCode, getAllowedEmails } from '../auth.js';
 import Sortable from 'sortablejs';
 import { layoutJustifiedGrid } from './project.js';
+import { initDotGrid } from '../utils/dotGrid.js';
+
+initDotGrid();
 
 let currentUser = null;
 let selectedProjectId = null;
