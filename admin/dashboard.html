@@ -78,7 +78,10 @@
             <button id="btn-back-to-list" class="btn-secondary btn-sm">← Quay lại</button>
             <button id="btn-save-order" class="btn-primary btn-sm" style="display: none;">Lưu</button>
           </div>
-          <h2 id="detail-project-name" style="margin-bottom: 4px;"></h2>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <input type="text" id="detail-project-name" style="font-size: 24px; font-weight: bold; padding: 4px 8px; border: 1px solid transparent; border-radius: 4px; outline: none; width: 100%; max-width: 400px; font-family: inherit; background: transparent; color: inherit; margin-left: -8px; transition: border-color 0.2s;" />
+            <button id="btn-save-name" class="btn-primary btn-sm" style="padding: 4px 12px; display: none;">Lưu Tên</button>
+          </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
             <span style="font-size: 13px; color: var(--color-text-muted);">Slug (URL): </span>
             <input type="text" id="detail-project-slug" style="font-size: 13px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px; outline: none; width: 250px; font-family: inherit; background: transparent; color: inherit;" placeholder="ten-project-slug" />

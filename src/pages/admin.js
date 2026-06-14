@@ -347,7 +347,38 @@ async function renderProjectDetail(projectId) {
   const images = await fetchImages(projectId);
   let currentImages = [...images];
 
-  document.getElementById('detail-project-name').textContent = project.name;
+  const nameInput = document.getElementById('detail-project-name');
+  const saveNameBtn = document.getElementById('btn-save-name');
+  nameInput.value = project.name;
+  saveNameBtn.style.display = 'none';
+
+  nameInput.oninput = () => {
+    saveNameBtn.style.display = (nameInput.value.trim() !== project.name && nameInput.value.trim() !== '') ? 'block' : 'none';
+  };
+  
+  // Style input on focus
+  nameInput.onfocus = () => nameInput.style.borderColor = 'var(--color-border)';
+  nameInput.onblur = () => nameInput.style.borderColor = 'transparent';
+
+  saveNameBtn.onclick = async () => {
+    const newName = nameInput.value.trim();
+    if (!newName) return;
+
+    try {
+      saveNameBtn.textContent = 'Đang lưu...';
+      saveNameBtn.disabled = true;
+      await updateDoc(doc(db, 'projects', projectId), { name: newName });
+      project.name = newName;
+      showToast('Đã lưu Tên Project thành công', 'success');
+      saveNameBtn.style.display = 'none';
+    } catch (err) {
+      console.error(err);
+      showToast('Lỗi khi lưu Tên Project', 'error');
+    } finally {
+      saveNameBtn.textContent = 'Lưu Tên';
+      saveNameBtn.disabled = false;
+    }
+  };
   
   const slugInput = document.getElementById('detail-project-slug');
   const saveSlugBtn = document.getElementById('btn-save-slug');
