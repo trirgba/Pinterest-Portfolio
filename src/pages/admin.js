@@ -764,58 +764,139 @@ async function setupAdminProfile() {
 }
 
 // ==========================================
-// ANALYTICS MODAL
+// ANALYTICS SECTION
 // ==========================================
 
-function setupAnalyticsModal() {
-  const btnOpen = document.getElementById('btn-analytics');
-  const modal = document.getElementById('modal-analytics');
-  const btnClose = document.querySelector('.modal-close-analytics');
-  const btnInputUrl = document.getElementById('btn-input-analytics-url');
+async function setupAnalyticsSection() {
+  const section = document.getElementById('admin-analytics-section');
+  const tabsContainer = document.getElementById('analytics-tabs-container');
   const iframe = document.getElementById('looker-iframe');
   const placeholder = document.getElementById('analytics-placeholder');
+  const actionsDiv = document.getElementById('analytics-actions');
+  const btnEdit = document.getElementById('btn-edit-analytics');
+  const btnDelete = document.getElementById('btn-delete-analytics');
+  const btnAddEmpty = document.getElementById('btn-add-analytics-empty');
   
-  if (!btnOpen || !modal) return;
+  if (!section) return;
 
-  const loadIframe = () => {
-    const savedUrl = localStorage.getItem('lookerStudioUrl');
-    if (savedUrl) {
-      placeholder.style.display = 'none';
-      iframe.style.display = 'block';
-      if (iframe.src !== savedUrl) {
-        iframe.src = savedUrl;
-      }
-    } else {
+  let reports = [];
+  let activeReportId = null;
+
+  // Render tabs
+  const renderTabs = () => {
+    // Remove existing tabs
+    const tabs = tabsContainer.querySelectorAll('.analytics-tab');
+    tabs.forEach(t => t.remove());
+
+    const btnAdd = document.getElementById('btn-add-analytics');
+    
+    if (reports.length === 0) {
       placeholder.style.display = 'block';
       iframe.style.display = 'none';
+      actionsDiv.style.display = 'none';
+      activeReportId = null;
+      return;
+    }
+
+    // Nếu activeReportId bị xoá hoặc chưa có, chọn cái đầu tiên
+    if (!reports.find(r => r.id === activeReportId)) {
+      activeReportId = reports[0].id;
+    }
+
+    reports.forEach(report => {
+      const btn = document.createElement('button');
+      btn.className = `btn-secondary btn-sm analytics-tab ${report.id === activeReportId ? 'active' : ''}`;
+      btn.style.flexShrink = '0';
+      if (report.id === activeReportId) {
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-primary');
+      }
+      btn.textContent = report.name;
+      btn.onclick = () => {
+        activeReportId = report.id;
+        renderTabs();
+      };
+      tabsContainer.insertBefore(btn, btnAdd);
+    });
+
+    const activeReport = reports.find(r => r.id === activeReportId);
+    if (activeReport) {
+      placeholder.style.display = 'none';
+      iframe.style.display = 'block';
+      actionsDiv.style.display = 'flex';
+      if (iframe.src !== activeReport.url) {
+        iframe.src = activeReport.url;
+      }
     }
   };
 
-  btnOpen.addEventListener('click', () => {
-    modal.classList.add('active');
-    loadIframe();
-  });
-
-  const closeModal = () => modal.classList.remove('active');
-  if (btnClose) btnClose.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-  if (btnInputUrl) {
-    btnInputUrl.addEventListener('click', () => {
-      const currentUrl = localStorage.getItem('lookerStudioUrl') || '';
-      const newUrl = prompt('Nhập đường dẫn nhúng (Embed URL) của báo cáo Looker Studio:\\n(Ví dụ: https://lookerstudio.google.com/embed/reporting/.../page/...)', currentUrl);
-      if (newUrl !== null) {
-        if (newUrl.trim() === '') {
-          localStorage.removeItem('lookerStudioUrl');
-          showToast('Đã xoá cấu hình Analytics', 'info');
-        } else {
-          localStorage.setItem('lookerStudioUrl', newUrl.trim());
-          showToast('Đã lưu cấu hình Analytics', 'success');
-        }
-        loadIframe();
+  const loadReports = async () => {
+    try {
+      const snap = await getDoc(doc(db, 'admin_settings', 'config'));
+      if (snap.exists() && snap.data().analytics_reports) {
+        reports = snap.data().analytics_reports;
       }
-    });
+    } catch (e) {
+      console.error("Lỗi tải reports:", e);
+    }
+    renderTabs();
+  };
+
+  const saveReports = async () => {
+    try {
+      await setDoc(doc(db, 'admin_settings', 'config'), { analytics_reports: reports }, { merge: true });
+      showToast('Đã lưu cấu hình biểu đồ', 'success');
+      renderTabs();
+    } catch (e) {
+      showToast('Lỗi lưu cấu hình', 'error');
+    }
+  };
+
+  const handleAdd = () => {
+    const name = prompt('Nhập tên biểu đồ mới (vd: Tổng quan):');
+    if (!name || !name.trim()) return;
+    const url = prompt('Nhập Embed URL từ Looker Studio:');
+    if (!url || !url.trim()) return;
+
+    const newReport = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      url: url.trim()
+    };
+    reports.push(newReport);
+    activeReportId = newReport.id;
+    saveReports();
+  };
+
+  const btnAddTop = document.getElementById('btn-add-analytics');
+  if (btnAddTop) btnAddTop.onclick = handleAdd;
+  if (btnAddEmpty) btnAddEmpty.onclick = handleAdd;
+
+  if (btnEdit) {
+    btnEdit.onclick = () => {
+      const activeReport = reports.find(r => r.id === activeReportId);
+      if (!activeReport) return;
+      const newName = prompt('Sửa tên biểu đồ:', activeReport.name);
+      if (newName === null) return;
+      const newUrl = prompt('Sửa Embed URL:', activeReport.url);
+      if (newUrl === null) return;
+
+      activeReport.name = newName.trim() || activeReport.name;
+      activeReport.url = newUrl.trim() || activeReport.url;
+      saveReports();
+    };
   }
+
+  if (btnDelete) {
+    btnDelete.onclick = () => {
+      if (confirm('Bạn có chắc muốn xoá biểu đồ này?')) {
+        reports = reports.filter(r => r.id !== activeReportId);
+        saveReports();
+      }
+    };
+  }
+
+  await loadReports();
 }
 
 // ==========================================
@@ -862,6 +943,9 @@ export async function initAdminPage() {
     } else {
       backToListBtn.addEventListener('click', () => {
         hideProjectDetail();
+        // Cần đảm bảo analytics section hiện lại khi quay ra list
+        const analyticsSection = document.getElementById('admin-analytics-section');
+        if (analyticsSection) analyticsSection.style.display = 'block';
       });
     }
   }
@@ -926,13 +1010,15 @@ export async function initAdminPage() {
   setupUpload();
   setupNotifications();
   setupAdminProfile();
-  setupAnalyticsModal();
+  await setupAnalyticsSection();
   
   if (editId) {
     const toolbar = document.querySelector('.admin-toolbar');
     const projectList = document.getElementById('project-list');
+    const analyticsSection = document.getElementById('admin-analytics-section');
     if (toolbar) toolbar.style.display = 'none';
     if (projectList) projectList.style.display = 'none';
+    if (analyticsSection) analyticsSection.style.display = 'none';
     
     selectedProjectId = editId;
     await renderProjectDetail(editId);
