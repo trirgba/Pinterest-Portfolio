@@ -347,73 +347,24 @@ async function renderProjectDetail(projectId) {
   const images = await fetchImages(projectId);
   let currentImages = [...images];
 
+  const saveBtn = document.getElementById('btn-save-order');
+
   const nameInput = document.getElementById('detail-project-name');
-  const saveNameBtn = document.getElementById('btn-save-name');
   nameInput.value = project.name;
-  saveNameBtn.style.display = 'none';
 
   nameInput.oninput = () => {
-    saveNameBtn.style.display = (nameInput.value.trim() !== project.name && nameInput.value.trim() !== '') ? 'block' : 'none';
+    if (saveBtn) saveBtn.style.display = 'block';
   };
   
   // Style input on focus
   nameInput.onfocus = () => nameInput.style.borderColor = 'var(--color-border)';
   nameInput.onblur = () => nameInput.style.borderColor = 'transparent';
 
-  saveNameBtn.onclick = async () => {
-    const newName = nameInput.value.trim();
-    if (!newName) return;
-
-    try {
-      saveNameBtn.textContent = 'Đang lưu...';
-      saveNameBtn.disabled = true;
-      await updateDoc(doc(db, 'projects', projectId), { name: newName });
-      project.name = newName;
-      showToast('Đã lưu Tên Project thành công', 'success');
-      saveNameBtn.style.display = 'none';
-    } catch (err) {
-      console.error(err);
-      showToast('Lỗi khi lưu Tên Project', 'error');
-    } finally {
-      saveNameBtn.textContent = 'Lưu Tên';
-      saveNameBtn.disabled = false;
-    }
-  };
-  
   const slugInput = document.getElementById('detail-project-slug');
-  const saveSlugBtn = document.getElementById('btn-save-slug');
   slugInput.value = project.slug || project.id;
-  saveSlugBtn.style.display = 'none';
 
   slugInput.oninput = () => {
-    saveSlugBtn.style.display = (slugInput.value.trim() !== (project.slug || project.id)) ? 'block' : 'none';
-  };
-
-  saveSlugBtn.onclick = async () => {
-    const newSlug = slugInput.value.trim();
-    if (!newSlug) return;
-    
-    // Validate slug (no spaces, lowercase)
-    const validSlug = createSlug(newSlug);
-    if (newSlug !== validSlug) {
-      showToast('Slug đã được tự động chuẩn hoá (xóa dấu, khoảng trắng)', 'info');
-      slugInput.value = validSlug;
-    }
-
-    try {
-      saveSlugBtn.textContent = 'Đang lưu...';
-      saveSlugBtn.disabled = true;
-      await updateDoc(doc(db, 'projects', projectId), { slug: validSlug });
-      project.slug = validSlug;
-      showToast('Đã lưu Slug thành công', 'success');
-      saveSlugBtn.style.display = 'none';
-    } catch (err) {
-      console.error(err);
-      showToast('Lỗi khi lưu Slug', 'error');
-    } finally {
-      saveSlugBtn.textContent = 'Lưu Slug';
-      saveSlugBtn.disabled = false;
-    }
+    if (saveBtn) saveBtn.style.display = 'block';
   };
 
   document.getElementById('detail-image-count').textContent = `${images.length} ảnh`;
@@ -883,12 +834,34 @@ export async function initAdminPage() {
           batch.update(ref, { order: index });
         });
 
+        // Update name and slug
+        const nameInput = document.getElementById('detail-project-name');
+        const slugInput = document.getElementById('detail-project-slug');
+        const newName = nameInput ? nameInput.value.trim() : '';
+        const newSlugRaw = slugInput ? slugInput.value.trim() : '';
+        
+        const projectRef = doc(db, 'projects', selectedProjectId);
+        const updates = {};
+        if (newName) updates.name = newName;
+        if (newSlugRaw) {
+          const validSlug = createSlug(newSlugRaw);
+          if (newSlugRaw !== validSlug) {
+             slugInput.value = validSlug;
+             showToast('Slug đã được tự động chuẩn hoá', 'info');
+          }
+          updates.slug = validSlug;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          batch.update(projectRef, updates);
+        }
+
         await batch.commit();
-        showToast('Đã lưu bố cục ảnh', 'success');
+        showToast('Đã lưu thay đổi', 'success');
         saveOrderBtn.style.display = 'none';
       } catch (error) {
-        console.error('Error saving order:', error);
-        showToast('Lỗi khi lưu bố cục', 'error');
+        console.error('Error saving:', error);
+        showToast('Lỗi khi lưu', 'error');
       } finally {
         saveOrderBtn.textContent = originalText;
         saveOrderBtn.disabled = false;
