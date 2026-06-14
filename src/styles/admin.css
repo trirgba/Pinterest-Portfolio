@@ -689,3 +689,53 @@
 .email-list li:last-child, .history-list .history-item:last-child {
   border-bottom: none;
 }
+
+/* Analytics tabs & actions */
+.analytics-tab {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.analytics-tab:hover {
+  border-color: var(--color-text-muted);
+  background: var(--color-bg);
+  transform: translateY(-1px);
+}
+
+.analytics-tab.active {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+#analytics-actions .btn-secondary,
+#analytics-actions .btn-icon,
+#btn-add-analytics {
+  background: var(--color-surface);
+}
+
+#analytics-actions .btn-secondary:hover {
+  border-color: var(--color-text-muted);
+  background: var(--color-bg);
+  transform: translateY(-1px);
+}
+
+#analytics-actions .btn-icon:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+  background: var(--color-bg);
+  transform: translateY(-1px);
+}
+
+#analytics-actions .btn-icon.danger:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: #fef2f2;
+}
