@@ -9,8 +9,7 @@ export function initDotGrid() {
       body > main,
       body > footer,
       body > .admin-content,
-      body > .container,
-      body > div:not(#dot-cursor-layer) {
+      body > .container {
         position: relative;
         z-index: 1;
       }
