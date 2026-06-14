@@ -764,6 +764,61 @@ async function setupAdminProfile() {
 }
 
 // ==========================================
+// ANALYTICS MODAL
+// ==========================================
+
+function setupAnalyticsModal() {
+  const btnOpen = document.getElementById('btn-analytics');
+  const modal = document.getElementById('modal-analytics');
+  const btnClose = document.querySelector('.modal-close-analytics');
+  const btnInputUrl = document.getElementById('btn-input-analytics-url');
+  const iframe = document.getElementById('looker-iframe');
+  const placeholder = document.getElementById('analytics-placeholder');
+  
+  if (!btnOpen || !modal) return;
+
+  const loadIframe = () => {
+    const savedUrl = localStorage.getItem('lookerStudioUrl');
+    if (savedUrl) {
+      placeholder.style.display = 'none';
+      iframe.style.display = 'block';
+      if (iframe.src !== savedUrl) {
+        iframe.src = savedUrl;
+      }
+    } else {
+      placeholder.style.display = 'block';
+      iframe.style.display = 'none';
+    }
+  };
+
+  btnOpen.addEventListener('click', () => {
+    modal.classList.add('active');
+    loadIframe();
+  });
+
+  const closeModal = () => modal.classList.remove('active');
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  if (btnInputUrl) {
+    btnInputUrl.addEventListener('click', () => {
+      const currentUrl = localStorage.getItem('lookerStudioUrl') || '';
+      const newUrl = prompt('Nhập đường dẫn nhúng (Embed URL) của báo cáo Looker Studio:\\n(Ví dụ: https://lookerstudio.google.com/embed/reporting/.../page/...)', currentUrl);
+      if (newUrl !== null) {
+        if (newUrl.trim() === '') {
+          localStorage.removeItem('lookerStudioUrl');
+          showToast('Đã xoá cấu hình Analytics', 'info');
+        } else {
+          localStorage.setItem('lookerStudioUrl', newUrl.trim());
+          showToast('Đã lưu cấu hình Analytics', 'success');
+        }
+        loadIframe();
+      }
+    });
+  }
+}
+
+// ==========================================
 // INIT
 // ==========================================
 
@@ -871,6 +926,7 @@ export async function initAdminPage() {
   setupUpload();
   setupNotifications();
   setupAdminProfile();
+  setupAnalyticsModal();
   
   if (editId) {
     const toolbar = document.querySelector('.admin-toolbar');

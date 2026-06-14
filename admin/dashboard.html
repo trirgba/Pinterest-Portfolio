@@ -60,11 +60,20 @@
   <!-- Main Content -->
   <div class="admin-content">
     <!-- Toolbar -->
-    <div class="admin-toolbar">
+    <div class="admin-toolbar" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
       <h2>Projects</h2>
-      <button id="btn-create-project" class="btn-primary">
-        <span>+</span> Tạo project
-      </button>
+      <div style="display: flex; gap: 12px;">
+        <button id="btn-analytics" class="btn-secondary" title="Xem thống kê truy cập" style="display: flex; align-items: center; gap: 6px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"/>
+            <path d="m19 9-5 5-4-4-3 3"/>
+          </svg>
+          Thống kê
+        </button>
+        <button id="btn-create-project" class="btn-primary">
+          <span>+</span> Tạo project
+        </button>
+      </div>
     </div>
 
     <!-- Project List -->
@@ -169,6 +178,31 @@
         <div id="admin-login-history" class="history-list">
           <!-- list -->
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Analytics (Looker Studio) -->
+  <div id="modal-analytics" class="modal-overlay">
+    <div class="modal-content" style="max-width: 90%; width: 1000px; height: 85vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="margin: 0;">Thống kê truy cập</h2>
+          <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--color-text-muted);">
+            Dữ liệu được cấp bởi Google Looker Studio.
+          </p>
+        </div>
+        <button class="btn-icon modal-close-analytics">✕</button>
+      </div>
+      
+      <!-- Vùng chứa iframe Looker Studio -->
+      <div id="analytics-iframe-container" style="flex: 1; border: 1px dashed var(--color-border); border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #fafafa;">
+        <div style="text-align: center; padding: 20px;" id="analytics-placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); margin-bottom: 16px;"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          <p style="color: var(--color-text-muted); margin-bottom: 16px;">Chưa có báo cáo Looker Studio.</p>
+          <button id="btn-input-analytics-url" class="btn-secondary btn-sm">Nhập URL Báo Cáo (Embed Link)</button>
+        </div>
+        <iframe id="looker-iframe" style="display: none; width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
       </div>
     </div>
   </div>
