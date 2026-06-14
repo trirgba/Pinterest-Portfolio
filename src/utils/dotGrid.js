@@ -1,6 +1,22 @@
 export function initDotGrid() {
   const setup = () => {
     if (document.getElementById('dot-cursor-layer')) return;
+
+    // Inject CSS để đảm bảo mọi nội dung chính nằm trên dot layer
+    const style = document.createElement('style');
+    style.textContent = `
+      body > header,
+      body > main,
+      body > footer,
+      body > .admin-content,
+      body > .container,
+      body > div:not(#dot-cursor-layer) {
+        position: relative;
+        z-index: 1;
+      }
+    `;
+    document.head.appendChild(style);
+
     const dotLayer = document.createElement('div');
     dotLayer.id = 'dot-cursor-layer';
     Object.assign(dotLayer.style, {
@@ -13,9 +29,10 @@ export function initDotGrid() {
       backgroundPosition: '5px 5px',
       webkitMaskImage: 'radial-gradient(120px circle at var(--cursor-x, -100%) var(--cursor-y, -100%), black, transparent)',
       maskImage: 'radial-gradient(120px circle at var(--cursor-x, -100%) var(--cursor-y, -100%), black, transparent)',
-      opacity: '0.4', // Chỉnh độ đậm của dot
+      opacity: '0.4',
     });
-    document.body.appendChild(dotLayer);
+    // Chèn vào đầu body để nằm dưới cùng trong DOM
+    document.body.prepend(dotLayer);
 
     document.addEventListener('mousemove', (e) => {
       dotLayer.style.setProperty('--cursor-x', `${e.clientX}px`);
