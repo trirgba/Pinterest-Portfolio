@@ -426,13 +426,11 @@ async function renderProjectDetail(projectId) {
       layoutJustifiedGrid(currentImages, imageGrid);
 
       // Show the save button
-      const saveBtn = document.getElementById('btn-save-order');
       if (saveBtn) saveBtn.style.display = 'block';
     },
   });
 
   // Hide save button initially
-  const saveBtn = document.getElementById('btn-save-order');
   if (saveBtn) saveBtn.style.display = 'none';
 }
 
