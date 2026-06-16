@@ -23,11 +23,11 @@ export function initDotGrid() {
       inset: '0',
       pointerEvents: 'none',
       zIndex: '0',
-      backgroundImage: 'radial-gradient(circle, rgba(0, 0, 0, 0.4) 1px, transparent 1px)',
+      backgroundImage: 'radial-gradient(circle, rgba(0, 0, 0, 0.16) 1px, transparent 1px)',
       backgroundSize: '10px 10px',
       backgroundPosition: '5px 5px',
-      webkitMaskImage: 'radial-gradient(120px circle at var(--cursor-x, -100%) var(--cursor-y, -100%), black 0%, rgba(0, 0, 0, 0.75) 100%)',
-      maskImage: 'radial-gradient(120px circle at var(--cursor-x, -100%) var(--cursor-y, -100%), black 0%, rgba(0, 0, 0, 0.75) 100%)',
+      webkitMaskImage: 'radial-gradient(circle at var(--cursor-x, -100%) var(--cursor-y, -100%), black 0px, black 40px, rgba(0, 0, 0, 0.375) 120px)',
+      maskImage: 'radial-gradient(circle at var(--cursor-x, -100%) var(--cursor-y, -100%), black 0px, black 40px, rgba(0, 0, 0, 0.375) 120px)',
     });
     // Chèn vào đầu body để nằm dưới cùng trong DOM
     document.body.prepend(dotLayer);
