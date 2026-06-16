@@ -262,6 +262,7 @@ button {
   overflow: hidden;
   border-radius: var(--radius-card);
   transition: box-shadow var(--transition-fast);
+  border: 1px solid #ddd;
 }
 
 .thumb-img-large {
