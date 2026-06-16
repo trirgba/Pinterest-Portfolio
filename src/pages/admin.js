@@ -379,11 +379,35 @@ async function renderProjectDetail(projectId) {
     const item = document.createElement('div');
     item.className = 'admin-image-item';
     item.dataset.id = img.id;
+    if (img.isFullWidth) item.dataset.isFullWidth = 'true';
+
     item.innerHTML = `
       <img src="${getOptimizedUrl(img.cloudinaryId, { width: 800 })}" alt="Image ${index + 1}" loading="lazy">
       <span class="order-badge">${index + 1}</span>
+      <button class="expand-btn ${img.isFullWidth ? 'active' : ''}" title="Phóng to 1 dòng">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-expand"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8M3 21l6-6M3 21v-4.8M3 21h4.8M3 3l6 6M3 3v4.8M3 3h4.8M21 3l-6 6M21 3v4.8M21 3h-4.8"/></svg>
+      </button>
       <button class="delete-btn" title="Xoá ảnh">✕</button>
     `;
+
+    item.querySelector('.expand-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const newStatus = item.dataset.isFullWidth !== 'true';
+      item.dataset.isFullWidth = newStatus ? 'true' : 'false';
+      
+      if (newStatus) {
+        item.querySelector('.expand-btn').classList.add('active');
+      } else {
+        item.querySelector('.expand-btn').classList.remove('active');
+      }
+
+      // Update currentImages array so layout function knows
+      const imgData = currentImages.find(i => i.id === img.id);
+      if (imgData) imgData.isFullWidth = newStatus;
+
+      layoutJustifiedGrid(currentImages, imageGrid);
+      if (saveBtn) saveBtn.style.display = 'block';
+    });
 
     item.querySelector('.delete-btn').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -971,7 +995,10 @@ export async function initAdminPage() {
         items.forEach((item, index) => {
           const imgId = item.dataset.id;
           const ref = doc(db, 'projects', selectedProjectId, 'images', imgId);
-          batch.update(ref, { order: index });
+          batch.update(ref, { 
+            order: index,
+            isFullWidth: item.dataset.isFullWidth === 'true'
+          });
         });
 
         // Update name and slug

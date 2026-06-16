@@ -34,41 +34,49 @@ export function layoutJustifiedGrid(images, container) {
   
   const itemElements = Array.from(container.children);
 
+  const processRow = (row, rowWidth, forceFullWidth) => {
+    if (row.length === 0) return;
+    const gapsWidth = (row.length - 1) * gap;
+    const availableWidth = containerWidth - gapsWidth;
+    // Stretch to full width
+    const scale = availableWidth / rowWidth;
+    const finalHeight = targetHeight * scale;
+
+    row.forEach((rowItem) => {
+      const itemWidth = rowItem.ratio * finalHeight;
+      rowItem.el.style.width = `${itemWidth}px`;
+      rowItem.el.style.height = `${finalHeight}px`;
+    });
+  };
+
   images.forEach((img, index) => {
-    // Lấy tỷ lệ từ dữ liệu, fallback 1:1 nếu thiếu
     const ratio = (img.width && img.height) ? (img.width / img.height) : 1;
     const itemWidthAtTarget = ratio * targetHeight;
 
-    if (currentRow.length > 0 && currentRowWidth + itemWidthAtTarget + (currentRow.length * gap) > containerWidth) {
-      // Hàng đã đầy, tính scale factor để kéo căng ra cho khít 100% chiều rộng
-      const gapsWidth = (currentRow.length - 1) * gap;
-      const availableWidth = containerWidth - gapsWidth;
-      const scale = availableWidth / currentRowWidth;
-      const finalHeight = targetHeight * scale;
-
-      currentRow.forEach((rowItem) => {
-        const itemWidth = rowItem.ratio * finalHeight;
-        rowItem.el.style.width = `${itemWidth}px`;
-        rowItem.el.style.height = `${finalHeight}px`;
-      });
-
-      // Bắt đầu hàng mới
+    if (img.isFullWidth) {
+      // Process current row first
+      processRow(currentRow, currentRowWidth, false);
       currentRow = [];
       currentRowWidth = 0;
-    }
 
-    currentRow.push({ ratio, el: itemElements[index] });
-    currentRowWidth += itemWidthAtTarget;
+      // Make this image full width
+      const el = itemElements[index];
+      const finalHeight = containerWidth / ratio;
+      el.style.width = `${containerWidth}px`;
+      el.style.height = `${finalHeight}px`;
+    } else {
+      if (currentRow.length > 0 && currentRowWidth + itemWidthAtTarget + (currentRow.length * gap) > containerWidth) {
+        processRow(currentRow, currentRowWidth, false);
+        currentRow = [];
+        currentRowWidth = 0;
+      }
+      currentRow.push({ ratio, el: itemElements[index] });
+      currentRowWidth += itemWidthAtTarget;
+    }
   });
 
-  // Xử lý hàng cuối cùng (không kéo căng để tránh ảnh bị phóng quá to)
-  if (currentRow.length > 0) {
-    currentRow.forEach((rowItem) => {
-      const itemWidth = rowItem.ratio * targetHeight;
-      rowItem.el.style.width = `${itemWidth}px`;
-      rowItem.el.style.height = `${targetHeight}px`;
-    });
-  }
+  // Xử lý hàng cuối cùng (kéo căng full dòng theo yêu cầu mới)
+  processRow(currentRow, currentRowWidth, false);
 }
 
 /**

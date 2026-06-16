@@ -373,14 +373,39 @@
   opacity: 0;
   transition: opacity var(--transition-fast);
   cursor: pointer;
+  border: none;
 }
 
-.admin-image-item:hover .delete-btn {
+.admin-image-item .expand-btn {
+  position: absolute;
+  top: 6px;
+  right: 40px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+  cursor: pointer;
+  border: none;
+}
+
+.admin-image-item:hover .delete-btn,
+.admin-image-item:hover .expand-btn {
   opacity: 1;
 }
 
 .admin-image-item .delete-btn:hover {
   background: var(--color-danger);
+}
+
+.admin-image-item .expand-btn:hover,
+.admin-image-item .expand-btn.active {
+  background: var(--color-accent);
 }
 
 /* Modal */
