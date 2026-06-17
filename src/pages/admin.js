@@ -1,5 +1,5 @@
 /**
- * Admin Dashboard Logic
+ * Admin Dashboard Logic (Multi-Section)
  * Spec Section 7: CRUD Projects, Upload, Drag & Drop
  */
 import { db, auth } from '../firebase.js';
@@ -13,6 +13,7 @@ import {
   updateDoc,
   query,
   orderBy,
+  where,
   writeBatch,
   serverTimestamp,
   onSnapshot,
@@ -24,6 +25,7 @@ import { getCurrentUser, logout, onAuthChange, ADMIN_CODE_EMAIL, changeAdminCode
 import Sortable from 'sortablejs';
 import { layoutJustifiedGrid } from './project.js';
 import { initDotGrid } from '../utils/dotGrid.js';
+import { DEFAULT_SECTIONS, fetchSectionNames, saveSectionName } from '../config/sections.js';
 
 initDotGrid();
 
@@ -51,36 +53,64 @@ function showToast(message, type = 'info') {
 }
 
 // ==========================================
-// PROJECTS CRUD
+// PROJECTS CRUD (Multi-Section)
 // ==========================================
 
 /**
- * Fetch all projects
+ * Fetch projects theo section
+ * @param {string} sectionId - ID section ("1", "2", ...)
  */
-async function fetchProjects() {
-  const q = query(collection(db, 'projects'), orderBy('order', 'asc'));
-  const snapshot = await getDocs(q);
-  const projects = [];
+async function fetchProjectsBySection(sectionId) {
+  let projects = [];
 
-  for (const doc of snapshot.docs) {
-    const data = doc.data();
-    // Fetch top 3 images to match .project-thumb
-    const imagesQuery = query(
-      collection(db, 'projects', doc.id, 'images'),
-      orderBy('order', 'asc'),
-      limit(3)
+  if (sectionId === '1') {
+    // Section 1: lấy cả project cũ không có field section (backward compat)
+    const allQuery = query(
+      collection(db, 'projects'),
+      orderBy('order', 'asc')
     );
-    const imagesSnap = await getDocs(imagesQuery);
-    const images = imagesSnap.docs.map((imgDoc) => ({
-      id: imgDoc.id,
-      ...imgDoc.data(),
-    }));
+    const snapshot = await getDocs(allQuery);
 
-    projects.push({
-      id: doc.id,
-      ...data,
-      images,
-    });
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      if (data.section && data.section !== '1') continue;
+
+      const imagesQuery = query(
+        collection(db, 'projects', doc.id, 'images'),
+        orderBy('order', 'asc'),
+        limit(3)
+      );
+      const imagesSnap = await getDocs(imagesQuery);
+      const images = imagesSnap.docs.map((imgDoc) => ({
+        id: imgDoc.id,
+        ...imgDoc.data(),
+      }));
+
+      projects.push({ id: doc.id, ...data, images });
+    }
+  } else {
+    const q = query(
+      collection(db, 'projects'),
+      where('section', '==', sectionId),
+      orderBy('order', 'asc')
+    );
+    const snapshot = await getDocs(q);
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const imagesQuery = query(
+        collection(db, 'projects', doc.id, 'images'),
+        orderBy('order', 'asc'),
+        limit(3)
+      );
+      const imagesSnap = await getDocs(imagesQuery);
+      const images = imagesSnap.docs.map((imgDoc) => ({
+        id: imgDoc.id,
+        ...imgDoc.data(),
+      }));
+
+      projects.push({ id: doc.id, ...data, images });
+    }
   }
 
   return projects;
@@ -98,10 +128,10 @@ function createSlug(str) {
 }
 
 /**
- * Create new project
+ * Create new project — thuộc 1 section cụ thể
  */
-async function createProject(name) {
-  const projects = await fetchProjects();
+async function createProject(name, sectionId) {
+  const projects = await fetchProjectsBySection(sectionId);
   const order = projects.length;
   const slug = createSlug(name);
 
@@ -109,17 +139,18 @@ async function createProject(name) {
     name,
     slug,
     order,
+    section: sectionId,
     createdAt: serverTimestamp(),
   });
 
   showToast(`Đã tạo project "${name}"`, 'success');
-  await renderProjectList();
+  await renderProjectListForSection(sectionId);
 }
 
 /**
  * Delete project và toàn bộ images
  */
-async function deleteProject(projectId) {
+async function deleteProject(projectId, sectionId) {
   if (!confirm('Xoá project này? Hành động không thể hoàn tác.')) return;
 
   try {
@@ -141,7 +172,7 @@ async function deleteProject(projectId) {
     await deleteDoc(doc(db, 'projects', projectId));
     showToast('Đã xoá project', 'success');
     selectedProjectId = null;
-    await renderProjectList();
+    await renderProjectListForSection(sectionId);
     hideProjectDetail();
   } catch (error) {
     console.error('Error deleting project:', error);
@@ -247,20 +278,20 @@ async function deleteImage(projectId, imageId, cloudinaryId) {
 }
 
 // ==========================================
-// RENDERING
+// RENDERING (Multi-Section)
 // ==========================================
 
 /**
- * Render danh sách projects
+ * Render danh sách projects cho 1 section
  */
-async function renderProjectList() {
-  const container = document.getElementById('project-list');
+async function renderProjectListForSection(sectionId) {
+  const container = document.getElementById(`project-list-${sectionId}`);
   if (!container) return;
 
   container.innerHTML = '<div class="skeleton" style="height: 200px;"></div>';
 
   try {
-    const projects = await fetchProjects();
+    const projects = await fetchProjectsBySection(sectionId);
     container.innerHTML = '';
 
     if (projects.length === 0) {
@@ -300,7 +331,7 @@ async function renderProjectList() {
         </div>
         <div class="project-card-admin-actions">
           <button class="btn-secondary btn-sm view-btn" data-id="${project.id}">Xem & Quản lý</button>
-          <button class="btn-icon danger delete-btn" data-id="${project.id}" title="Xoá project">
+          <button class="btn-icon danger delete-btn" data-id="${project.id}" data-section="${sectionId}" title="Xoá project">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2">
               <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
             </svg>
@@ -313,13 +344,13 @@ async function renderProjectList() {
       });
 
       card.querySelector('.delete-btn').addEventListener('click', () => {
-        deleteProject(project.id);
+        deleteProject(project.id, sectionId);
       });
 
       container.appendChild(card);
     });
   } catch (error) {
-    console.error('Error loading projects:', error);
+    console.error(`Error loading projects for section ${sectionId}:`, error);
     container.innerHTML = `
       <div class="empty-state">
         <div class="icon">
@@ -473,20 +504,25 @@ function hideProjectDetail() {
 }
 
 // ==========================================
-// MODAL
+// MODAL (Multi-Section)
 // ==========================================
 
 function setupCreateModal() {
-  const openBtn = document.getElementById('btn-create-project');
   const modal = document.getElementById('modal-create');
   const cancelBtn = document.getElementById('modal-cancel');
   const form = document.getElementById('form-create-project');
+  const sectionInput = document.getElementById('input-project-section');
 
-  if (!openBtn || !modal) return;
+  if (!modal) return;
 
-  openBtn.addEventListener('click', () => {
-    modal.classList.add('active');
-    document.getElementById('input-project-name').focus();
+  // Bind tất cả nút "Tạo project" cho từng section
+  document.querySelectorAll('.btn-create-section').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const sectionId = btn.dataset.section;
+      sectionInput.value = sectionId;
+      modal.classList.add('active');
+      document.getElementById('input-project-name').focus();
+    });
   });
 
   cancelBtn.addEventListener('click', () => {
@@ -500,11 +536,48 @@ function setupCreateModal() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('input-project-name').value.trim();
+    const sectionId = sectionInput.value;
     if (!name) return;
 
-    await createProject(name);
+    await createProject(name, sectionId);
     document.getElementById('input-project-name').value = '';
     modal.classList.remove('active');
+  });
+}
+
+// ==========================================
+// SECTION NAME EDITING
+// ==========================================
+
+function setupSectionNameEditing() {
+  document.querySelectorAll('.section-name-input').forEach((input) => {
+    const sectionId = input.dataset.section;
+    const saveBtn = document.querySelector(`.btn-save-section-name[data-section="${sectionId}"]`);
+
+    // Hiện nút lưu khi sửa tên
+    input.addEventListener('input', () => {
+      if (saveBtn) saveBtn.style.display = '';
+    });
+
+    // Click nút lưu
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        const newName = input.value.trim();
+        if (!newName) {
+          showToast('Tên section không được để trống', 'error');
+          return;
+        }
+
+        try {
+          await saveSectionName(sectionId, newName);
+          showToast(`Đã lưu tên section: "${newName}"`, 'success');
+          saveBtn.style.display = 'none';
+        } catch (error) {
+          console.error('Error saving section name:', error);
+          showToast('Lỗi khi lưu tên section', 'error');
+        }
+      });
+    }
   });
 }
 
@@ -772,8 +845,6 @@ async function setupAdminProfile() {
       msg.textContent = 'Đang xử lý...';
       msg.style.color = 'var(--color-text-muted)';
       
-      // Verify old password (just calling signIn directly on auth might mess up state, but updatePassword handles it if recently signed in)
-      // For security, if token is old, we might need to re-authenticate. Assuming they just logged in:
       await changeAdminCode(newCode);
       
       msg.textContent = 'Đổi Admin Code thành công!';
@@ -927,7 +998,7 @@ async function setupAnalyticsSection() {
 }
 
 // ==========================================
-// INIT
+// INIT (Multi-Section)
 // ==========================================
 
 export async function initAdminPage() {
@@ -1036,23 +1107,34 @@ export async function initAdminPage() {
     });
   }
 
+  // Load section names từ Firestore và fill vào input
+  const sections = await fetchSectionNames();
+  sections.forEach((section) => {
+    const input = document.querySelector(`.section-name-input[data-section="${section.id}"]`);
+    if (input) input.value = section.name;
+  });
+
   setupCreateModal();
+  setupSectionNameEditing();
   setupUpload();
   setupNotifications();
   setupAdminProfile();
   await setupAnalyticsSection();
   
   if (editId) {
-    const toolbar = document.querySelector('.admin-toolbar');
-    const projectList = document.getElementById('project-list');
+    // Ẩn tất cả section blocks khi đang edit
+    document.querySelectorAll('.admin-section-block').forEach(block => {
+      block.style.display = 'none';
+    });
     const analyticsSection = document.getElementById('admin-analytics-section');
-    if (toolbar) toolbar.style.display = 'none';
-    if (projectList) projectList.style.display = 'none';
     if (analyticsSection) analyticsSection.style.display = 'none';
     
     selectedProjectId = editId;
     await renderProjectDetail(editId);
   } else {
-    await renderProjectList();
+    // Render project list cho từng section
+    for (const section of DEFAULT_SECTIONS) {
+      await renderProjectListForSection(section.id);
+    }
   }
 }

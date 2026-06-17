@@ -318,6 +318,28 @@ button {
   color: var(--color-text-muted);
 }
 
+/* ===========================
+   Portfolio Sections
+   =========================== */
+.portfolio-section {
+  margin-bottom: 64px;
+}
+
+.portfolio-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.section-header {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
 /* Project detail page title */
 .project-detail-title {
   font-size: 22px;

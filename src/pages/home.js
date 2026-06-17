@@ -1,7 +1,6 @@
 /**
- * Home Page Logic — Trang chủ
- * Spec Section 5: Project List
- * Fetch projects từ Firestore, render card thumbnail 3:2
+ * Home Page Logic — Trang chủ (Multi-Section)
+ * Fetch projects theo section từ Firestore, render card thumbnail 3:2
  */
 import { db } from '../firebase.js';
 import {
@@ -10,17 +9,63 @@ import {
   query,
   orderBy,
   limit,
+  where,
 } from 'firebase/firestore';
 import { getOptimizedUrl } from '../cloudinary.js';
 import { SITE_CONFIG } from '../config/seo.js';
 import { getCurrentUser } from '../auth.js';
+import { DEFAULT_SECTIONS, fetchSectionNames } from '../config/sections.js';
 
 /**
- * Fetch tất cả projects và 3 ảnh đầu tiên cho thumbnail
+ * Fetch projects theo section
+ * @param {string} sectionId - ID section ("1", "2", ...)
  */
-async function fetchProjects() {
-  const projectsQuery = query(
+async function fetchProjectsBySection(sectionId) {
+  let projectsQuery;
+
+  if (sectionId === '1') {
+    // Section 1: lấy cả project cũ không có field section (backward compat)
+    // Firestore không hỗ trợ OR query dễ dàng nên ta fetch tất cả rồi filter
+    const allQuery = query(
+      collection(db, 'projects'),
+      orderBy('order', 'asc')
+    );
+    const snapshot = await getDocs(allQuery);
+    const projects = [];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      // Section 1 = project có section === "1" hoặc không có field section
+      if (data.section && data.section !== '1') continue;
+
+      const imagesQuery = query(
+        collection(db, 'projects', doc.id, 'images'),
+        orderBy('order', 'asc'),
+        limit(3)
+      );
+      const imagesSnap = await getDocs(imagesQuery);
+      const images = imagesSnap.docs.map((imgDoc) => ({
+        id: imgDoc.id,
+        ...imgDoc.data(),
+      }));
+
+      projects.push({
+        id: doc.id,
+        name: data.name,
+        slug: data.slug,
+        order: data.order,
+        imageCount: data.imageCount || images.length,
+        images,
+      });
+    }
+
+    return projects;
+  }
+
+  // Các section khác: query chính xác
+  projectsQuery = query(
     collection(db, 'projects'),
+    where('section', '==', sectionId),
     orderBy('order', 'asc')
   );
   const snapshot = await getDocs(projectsQuery);
@@ -28,7 +73,6 @@ async function fetchProjects() {
 
   for (const doc of snapshot.docs) {
     const data = doc.data();
-    // Chỉ lấy 3 ảnh đầu tiên cho thumbnail — Spec note 7
     const imagesQuery = query(
       collection(db, 'projects', doc.id, 'images'),
       orderBy('order', 'asc'),
@@ -100,7 +144,7 @@ function renderProjectCard(project) {
 /**
  * Render loading skeleton
  */
-function renderSkeletons(container, count = 8) {
+function renderSkeletons(container, count = 3) {
   for (let i = 0; i < count; i++) {
     const skeleton = document.createElement('div');
     skeleton.className = 'project-card-skeleton';
@@ -116,24 +160,9 @@ function renderSkeletons(container, count = 8) {
 }
 
 /**
- * Render empty state
- */
-function renderEmptyState(container) {
-  container.innerHTML = `
-    <div class="empty-state">
-      <div class="icon">📸</div>
-      <h3>Chưa có project nào</h3>
-      <p>Các project sẽ xuất hiện ở đây khi admin thêm mới.</p>
-    </div>
-  `;
-}
-
-/**
- * Initialize trang chủ
+ * Initialize trang chủ — multi-section
  */
 export async function initHomePage() {
-  const grid = document.getElementById('projects-grid');
-  
   // Cập nhật trạng thái nút Login nếu đã đăng nhập
   const loginBtn = document.querySelector('.login-btn');
   getCurrentUser().then(user => {
@@ -143,31 +172,43 @@ export async function initHomePage() {
     }
   });
 
-  if (!grid) return;
+  // Fetch tên sections từ Firestore
+  const sections = await fetchSectionNames();
 
-  // Show loading
-  renderSkeletons(grid);
+  // Loop qua từng section
+  for (const section of sections) {
+    const sectionEl = document.getElementById(`section-${section.id}`);
+    const titleEl = document.getElementById(`section-title-${section.id}`);
+    const gridEl = document.getElementById(`projects-grid-${section.id}`);
 
-  try {
-    const projects = await fetchProjects();
-    grid.innerHTML = '';
+    if (!sectionEl || !gridEl) continue;
 
-    if (projects.length === 0) {
-      renderEmptyState(grid);
-      return;
+    // Set section title
+    if (titleEl) titleEl.textContent = section.name;
+
+    // Show skeleton trong khi loading
+    renderSkeletons(gridEl);
+
+    try {
+      const projects = await fetchProjectsBySection(section.id);
+
+      gridEl.innerHTML = '';
+
+      if (projects.length === 0) {
+        // Ẩn section nếu không có project
+        sectionEl.style.display = 'none';
+        continue;
+      }
+
+      // Hiện section và render cards
+      sectionEl.style.display = '';
+      projects.forEach((project) => {
+        gridEl.appendChild(renderProjectCard(project));
+      });
+    } catch (error) {
+      console.error(`Error loading section ${section.id}:`, error);
+      // Ẩn section nếu lỗi
+      sectionEl.style.display = 'none';
     }
-
-    projects.forEach((project) => {
-      grid.appendChild(renderProjectCard(project));
-    });
-  } catch (error) {
-    console.error('Error loading projects:', error);
-    grid.innerHTML = `
-      <div class="empty-state">
-        <div class="icon">⚠️</div>
-        <h3>Không thể tải dữ liệu</h3>
-        <p>Vui lòng thử lại sau.</p>
-      </div>
-    `;
   }
 }
