@@ -19,7 +19,7 @@ export function initDotGrid() {
         inset: 0;
         pointer-events: none;
         z-index: 0;
-        background-image: radial-gradient(circle, rgba(0, 0, 0, 0.16) 0.5px, transparent 0.5px);
+        background-image: radial-gradient(circle, rgba(0, 0, 0, 0.16) 0.5px, transparent 0.8px);
         background-size: 10px 10px;
         background-position: 5px 5px;
       }
@@ -28,7 +28,7 @@ export function initDotGrid() {
         content: "";
         position: absolute;
         inset: 0;
-        background-image: radial-gradient(circle, rgba(0, 0, 0, 0.4) 0.5px, transparent 0.5px);
+        background-image: radial-gradient(circle, rgba(0, 0, 0, 0.4) 0.5px, transparent 0.8px);
         background-size: 10px 10px;
         background-position: 5px 5px;
         -webkit-mask-image: radial-gradient(circle at var(--cursor-x, -100%) var(--cursor-y, -100%), black 0px, black 40px, transparent 120px);
