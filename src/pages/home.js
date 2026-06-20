@@ -112,24 +112,25 @@ function renderProjectCard(project) {
   const [img1, img2, img3] = project.images;
 
   const getSeoAlt = (index) => `${project.name} - ${SITE_CONFIG.title} - Ảnh ${index}`;
+  const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/hqdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
 
   card.innerHTML = `
     <div class="project-thumb">
       <div class="thumb-img-large">
         ${img1
-          ? `<img src="${getOptimizedUrl(img1.cloudinaryId, { width: 800 })}" alt="${getSeoAlt(1)}" title="${getSeoAlt(1)}" loading="lazy">`
+          ? `<img src="${getMediaUrl(img1, 800)}" alt="${getSeoAlt(1)}" title="${getSeoAlt(1)}" loading="lazy">`
           : '<div class="thumb-placeholder"></div>'
         }
       </div>
       <div class="thumb-img">
         ${img2
-          ? `<img src="${getOptimizedUrl(img2.cloudinaryId, { width: 400 })}" alt="${getSeoAlt(2)}" title="${getSeoAlt(2)}" loading="lazy">`
+          ? `<img src="${getMediaUrl(img2, 400)}" alt="${getSeoAlt(2)}" title="${getSeoAlt(2)}" loading="lazy">`
           : '<div class="thumb-placeholder"></div>'
         }
       </div>
       <div class="thumb-img">
         ${img3
-          ? `<img src="${getOptimizedUrl(img3.cloudinaryId, { width: 400 })}" alt="${getSeoAlt(3)}" title="${getSeoAlt(3)}" loading="lazy">`
+          ? `<img src="${getMediaUrl(img3, 400)}" alt="${getSeoAlt(3)}" title="${getSeoAlt(3)}" loading="lazy">`
           : '<div class="thumb-placeholder"></div>'
         }
       </div>

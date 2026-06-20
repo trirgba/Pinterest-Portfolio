@@ -313,16 +313,18 @@ async function renderProjectListForSection(sectionId) {
       const card = document.createElement('div');
       card.className = 'project-card-admin animate-fade-in';
       const [img1, img2, img3] = project.images || [];
+      const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/hqdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
+
       card.innerHTML = `
         <div class="project-thumb">
           <div class="thumb-img-large">
-            ${img1 ? `<img src="${getOptimizedUrl(img1.cloudinaryId, { width: 800 })}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
+            ${img1 ? `<img src="${getMediaUrl(img1, 800)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
           </div>
           <div class="thumb-img">
-            ${img2 ? `<img src="${getOptimizedUrl(img2.cloudinaryId, { width: 400 })}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
+            ${img2 ? `<img src="${getMediaUrl(img2, 400)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
           </div>
           <div class="thumb-img">
-            ${img3 ? `<img src="${getOptimizedUrl(img3.cloudinaryId, { width: 400 })}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
+            ${img3 ? `<img src="${getMediaUrl(img3, 400)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
           </div>
         </div>
         <div class="project-card-admin-body">
