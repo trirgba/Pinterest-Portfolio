@@ -207,19 +207,26 @@
 
     <!-- Project Detail (ẩn mặc định) -->
     <section id="project-detail" style="display: none; margin-top: 40px; border-top: 1px solid var(--color-border); padding-top: 32px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-        <div>
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px;">
+        <div style="width: 100%; max-width: 800px;">
           <div style="display: flex; gap: 8px; margin-bottom: 12px;">
             <button id="btn-back-to-list" class="btn-secondary btn-sm">← Quay lại</button>
             <button id="btn-save-order" class="btn-primary btn-sm" style="display: none;">Lưu</button>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <span style="font-size: 13px; color: var(--color-text-muted); min-width: 75px;">Tên Project: </span>
-            <input type="text" id="detail-project-name" style="font-size: 13px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px; outline: none; width: 300px; font-family: inherit; background: #fff; color: inherit;" placeholder="Nhập tên project..." />
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-            <span style="font-size: 13px; color: var(--color-text-muted); min-width: 75px;">Slug (URL): </span>
-            <input type="text" id="detail-project-slug" style="font-size: 13px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 4px; outline: none; width: 300px; font-family: inherit; background: #fff; color: inherit;" placeholder="ten-project-slug" />
+          <div style="display: flex; gap: 24px; margin-bottom: 16px; width: 100%;">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13px; color: var(--color-text-muted); min-width: 75px;">Tên Project: </span>
+                <input type="text" id="detail-project-name" style="font-size: 13px; padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 4px; outline: none; width: 100%; font-family: inherit; background: #fff; color: inherit;" placeholder="Nhập tên project..." />
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13px; color: var(--color-text-muted); min-width: 75px;">Slug (URL): </span>
+                <input type="text" id="detail-project-slug" style="font-size: 13px; padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 4px; outline: none; width: 100%; font-family: inherit; background: #fff; color: inherit;" placeholder="ten-project-slug" />
+              </div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column;">
+              <textarea id="detail-project-excerpt" style="font-size: 13px; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; outline: none; width: 100%; height: 100%; min-height: 60px; resize: none; font-family: inherit; background: #fff; color: inherit;" placeholder="Nhập miêu tả ngắn (excerpt)..."></textarea>
+            </div>
           </div>
           <span id="detail-image-count" class="meta" style="color: var(--color-text-muted); font-size: 14px;"></span>
         </div>

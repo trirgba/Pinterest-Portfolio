@@ -313,9 +313,15 @@ button {
   line-height: 1.3;
 }
 
-.project-count {
+.project-excerpt {
   font-size: 13px;
   color: var(--color-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
 }
 
 /* ===========================

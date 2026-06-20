@@ -54,6 +54,7 @@ async function fetchProjectsBySection(sectionId) {
         name: data.name,
         slug: data.slug,
         order: data.order,
+        excerpt: data.excerpt || '',
         imageCount: data.imageCount || images.length,
         images,
       });
@@ -89,6 +90,7 @@ async function fetchProjectsBySection(sectionId) {
       name: data.name,
       slug: data.slug,
       order: data.order,
+      excerpt: data.excerpt || '',
       imageCount: data.imageCount || images.length,
       images,
     });
@@ -134,7 +136,7 @@ function renderProjectCard(project) {
     </div>
     <div class="project-info">
       <h3 class="project-name">${project.name}</h3>
-      <span class="project-count">${project.imageCount || 0} ảnh</span>
+      ${project.excerpt ? `<p class="project-excerpt">${project.excerpt}</p>` : ''}
     </div>
   `;
 

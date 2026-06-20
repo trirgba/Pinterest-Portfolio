@@ -401,6 +401,16 @@ async function renderProjectDetail(projectId) {
     if (saveBtn) saveBtn.style.display = 'block';
   };
 
+  const excerptInput = document.getElementById('detail-project-excerpt');
+  if (excerptInput) {
+    excerptInput.value = project.excerpt || '';
+    excerptInput.oninput = () => {
+      if (saveBtn) saveBtn.style.display = 'block';
+    };
+    excerptInput.onfocus = () => excerptInput.style.borderColor = 'var(--color-border)';
+    excerptInput.onblur = () => excerptInput.style.borderColor = 'transparent';
+  }
+
   document.getElementById('detail-image-count').textContent = `${images.length} ảnh`;
 
   const imageGrid = document.getElementById('admin-image-grid');
@@ -1072,11 +1082,14 @@ export async function initAdminPage() {
           });
         });
 
-        // Update name and slug
+        // Update name, slug, and excerpt
         const nameInput = document.getElementById('detail-project-name');
         const slugInput = document.getElementById('detail-project-slug');
+        const excerptInput = document.getElementById('detail-project-excerpt');
+        
         const newName = nameInput ? nameInput.value.trim() : '';
         const newSlugRaw = slugInput ? slugInput.value.trim() : '';
+        const newExcerpt = excerptInput ? excerptInput.value.trim() : '';
         
         const projectRef = doc(db, 'projects', selectedProjectId);
         const updates = {};
@@ -1088,6 +1101,9 @@ export async function initAdminPage() {
              showToast('Slug đã được tự động chuẩn hoá', 'info');
           }
           updates.slug = validSlug;
+        }
+        if (excerptInput !== null) {
+          updates.excerpt = newExcerpt;
         }
 
         if (Object.keys(updates).length > 0) {
