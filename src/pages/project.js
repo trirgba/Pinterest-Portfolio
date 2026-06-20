@@ -54,7 +54,7 @@ export function layoutJustifiedGrid(images, container) {
     if (img.width && img.height) {
       ratio = img.width / img.height;
     } else if (img.type === 'youtube') {
-      ratio = 16 / 9;
+      ratio = img.isShort ? (9 / 16) : (16 / 9);
     }
     const itemWidthAtTarget = ratio * targetHeight;
 
@@ -197,11 +197,11 @@ function renderMosaicGrid(images, container) {
         if (isMuted) {
           iconMute.style.display = 'block';
           iconUnmute.style.display = 'none';
-          if (iframe) iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+          if (iframe) iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":[]}', '*');
         } else {
           iconMute.style.display = 'none';
           iconUnmute.style.display = 'block';
-          if (iframe) iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+          if (iframe) iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":[]}', '*');
         }
       });
     }

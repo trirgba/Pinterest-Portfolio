@@ -661,6 +661,7 @@ function setupUpload() {
       const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
       const match = url.match(regExp);
       const videoId = (match && match[2].length === 11) ? match[2] : null;
+      const isShort = url.includes('shorts/');
 
       if (!videoId) {
         showToast('Link YouTube không hợp lệ', 'error');
@@ -677,6 +678,7 @@ function setupUpload() {
         await addDoc(collection(db, 'projects', selectedProjectId, 'images'), {
           type: 'youtube',
           youtubeId: videoId,
+          isShort: isShort,
           order: nextOrder,
           createdAt: serverTimestamp(),
         });
