@@ -422,8 +422,17 @@ async function renderProjectDetail(projectId) {
     item.dataset.id = img.id;
     if (img.isFullWidth) item.dataset.isFullWidth = 'true';
 
+    const imgSrc = img.type === 'youtube' 
+      ? `https://img.youtube.com/vi/${img.youtubeId}/hqdefault.jpg`
+      : getOptimizedUrl(img.cloudinaryId, { width: 800 });
+
+    const ytOverlay = img.type === 'youtube' 
+      ? '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; pointer-events: none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>'
+      : '';
+
     item.innerHTML = `
-      <img src="${getOptimizedUrl(img.cloudinaryId, { width: 800 })}" alt="Image ${index + 1}" loading="lazy">
+      <img src="${imgSrc}" alt="Media ${index + 1}" loading="lazy">
+      ${ytOverlay}
       <span class="order-badge">${index + 1}</span>
       <button class="expand-btn ${img.isFullWidth ? 'active' : ''}" title="Phóng to 1 dòng">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-expand"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8M3 21l6-6M3 21v-4.8M3 21h4.8M3 3l6 6M3 3v4.8M3 3h4.8M21 3l-6 6M21 3v4.8M21 3h-4.8"/></svg>
@@ -634,6 +643,54 @@ function setupUpload() {
     if (files.length > 0) uploadImages(selectedProjectId, files);
     fileInput.value = '';
   });
+
+  // YouTube Input Logic
+  const ytInput = document.getElementById('input-youtube-url');
+  const btnAddYt = document.getElementById('btn-add-youtube');
+  if (ytInput && btnAddYt) {
+    btnAddYt.addEventListener('click', async () => {
+      if (!selectedProjectId) {
+        showToast('Vui lòng chọn project trước', 'error');
+        return;
+      }
+      const url = ytInput.value.trim();
+      if (!url) return;
+      
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      const videoId = (match && match[2].length === 11) ? match[2] : null;
+
+      if (!videoId) {
+        showToast('Link YouTube không hợp lệ', 'error');
+        return;
+      }
+
+      try {
+        btnAddYt.disabled = true;
+        btnAddYt.textContent = 'Đang thêm...';
+        
+        const existingImages = await fetchImages(selectedProjectId);
+        const nextOrder = existingImages.length;
+        
+        await addDoc(collection(db, 'projects', selectedProjectId, 'images'), {
+          type: 'youtube',
+          youtubeId: videoId,
+          order: nextOrder,
+          createdAt: serverTimestamp(),
+        });
+        
+        showToast('Đã thêm Video YouTube', 'success');
+        ytInput.value = '';
+        await renderProjectDetail(selectedProjectId);
+      } catch (err) {
+        console.error('Error adding YouTube:', err);
+        showToast('Lỗi khi thêm Video', 'error');
+      } finally {
+        btnAddYt.disabled = false;
+        btnAddYt.textContent = 'Thêm Video';
+      }
+    });
+  }
 }
 
 // ==========================================

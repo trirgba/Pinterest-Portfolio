@@ -16,8 +16,8 @@
 }
 
 .mosaic-item:hover {
-  box-shadow: var(--shadow-lg);
-  z-index: 1;
+  box-shadow: 0 0 0 1px #ffffff, 0 0 16px rgba(255, 255, 255, 0.8);
+  z-index: 10;
 }
 
 .mosaic-item::after {
@@ -25,13 +25,13 @@
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0);
-  transition: background var(--transition-fast);
+  transition: box-shadow var(--transition-fast);
   pointer-events: none;
   border-radius: var(--radius-card);
 }
 
 .mosaic-item:hover::after {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0);
 }
 
 .mosaic-item img {

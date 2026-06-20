@@ -50,7 +50,12 @@ export function layoutJustifiedGrid(images, container) {
   };
 
   images.forEach((img, index) => {
-    const ratio = (img.width && img.height) ? (img.width / img.height) : 1;
+    let ratio = 1;
+    if (img.width && img.height) {
+      ratio = img.width / img.height;
+    } else if (img.type === 'youtube') {
+      ratio = 16 / 9;
+    }
     const itemWidthAtTarget = ratio * targetHeight;
 
     if (img.isFullWidth) {
@@ -138,7 +143,68 @@ function renderMosaicGrid(images, container) {
     const projectName = document.getElementById('project-title')?.textContent || 'Project';
     const seoAlt = `${projectName} - ${SITE_CONFIG.title} - Ảnh ${index + 1}`;
 
-    item.innerHTML = `<img src="${getOptimizedUrl(img.cloudinaryId, { width: 800 })}" alt="${seoAlt}" title="${seoAlt}" loading="lazy">`;
+    const isYt = img.type === 'youtube';
+    const imgSrc = isYt 
+      ? `https://img.youtube.com/vi/${img.youtubeId}/hqdefault.jpg`
+      : getOptimizedUrl(img.cloudinaryId, { width: 800 });
+
+    const ytOverlay = isYt 
+      ? `<div class="yt-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 2;"><svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
+         <button class="yt-mute-btn" style="position: absolute; bottom: 8px; right: 8px; width: 32px; height: 32px; background: rgba(0,0,0,0.6); border-radius: 50%; color: white; border: none; cursor: pointer; z-index: 20; display: none; align-items: center; justify-content: center;">
+           <svg class="icon-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+           <svg class="icon-unmute" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+         </button>`
+      : '';
+
+    item.innerHTML = `
+      <img src="${imgSrc}" alt="${seoAlt}" title="${seoAlt}" loading="lazy" style="position: relative; z-index: 1;">
+      ${ytOverlay}
+    `;
+
+    if (isYt) {
+      let iframe = null;
+      let isMuted = true;
+      const muteBtn = item.querySelector('.yt-mute-btn');
+      const iconMute = item.querySelector('.icon-mute');
+      const iconUnmute = item.querySelector('.icon-unmute');
+      
+      let hoverTimer;
+
+      item.addEventListener('mouseenter', () => {
+        muteBtn.style.display = 'flex';
+        hoverTimer = setTimeout(() => {
+          if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.src = `https://www.youtube.com/embed/${img.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${img.youtubeId}&enablejsapi=1`;
+            iframe.style = 'position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 10; pointer-events: none;';
+            item.appendChild(iframe);
+          }
+        }, 300);
+      });
+
+      item.addEventListener('mouseleave', () => {
+        clearTimeout(hoverTimer);
+        muteBtn.style.display = 'none';
+        if (iframe) {
+          iframe.remove();
+          iframe = null;
+        }
+      });
+
+      muteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isMuted = !isMuted;
+        if (isMuted) {
+          iconMute.style.display = 'block';
+          iconUnmute.style.display = 'none';
+          if (iframe) iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+        } else {
+          iconMute.style.display = 'none';
+          iconUnmute.style.display = 'block';
+          if (iframe) iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+        }
+      });
+    }
 
     // Click to open lightbox
     item.addEventListener('click', () => openLightbox(images, index));
@@ -164,15 +230,26 @@ function openLightbox(images, index) {
 
   const overlay = document.getElementById('lightbox');
   const img = overlay.querySelector('img');
+  const iframe = document.getElementById('lightbox-iframe');
 
-  // Reset animation để zoom-in chạy lại mỗi lần mở
-  img.style.animation = 'none';
-  // Force reflow
-  void img.offsetHeight;
-  img.style.animation = '';
+  const media = images[index];
 
-  // Lightbox dùng ảnh to hơn nhưng vẫn ép sang WebP
-  img.src = getOptimizedUrl(images[index].cloudinaryId, { width: 1600 });
+  if (media.type === 'youtube') {
+    img.style.display = 'none';
+    iframe.style.display = 'block';
+    iframe.src = `https://www.youtube.com/embed/${media.youtubeId}?autoplay=1`;
+  } else {
+    iframe.style.display = 'none';
+    iframe.src = '';
+    img.style.display = 'block';
+    
+    // Reset animation
+    img.style.animation = 'none';
+    void img.offsetHeight;
+    img.style.animation = '';
+    img.src = getOptimizedUrl(media.cloudinaryId, { width: 1600 });
+  }
+
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -180,10 +257,13 @@ function openLightbox(images, index) {
 function closeLightbox() {
   const overlay = document.getElementById('lightbox');
   const img = overlay.querySelector('img');
+  const iframe = document.getElementById('lightbox-iframe');
+  
   overlay.classList.remove('active');
   document.body.style.overflow = '';
-  // Xoá src để tránh flash ảnh cũ khi mở lại
+  
   img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  iframe.src = '';
 }
 
 function navigateLightbox(direction) {
@@ -191,9 +271,7 @@ function navigateLightbox(direction) {
   if (currentLightboxIndex < 0) currentLightboxIndex = lightboxImages.length - 1;
   if (currentLightboxIndex >= lightboxImages.length) currentLightboxIndex = 0;
 
-  const overlay = document.getElementById('lightbox');
-  const img = overlay.querySelector('img');
-  img.src = getOptimizedUrl(lightboxImages[currentLightboxIndex].cloudinaryId, { width: 1600 });
+  openLightbox(lightboxImages, currentLightboxIndex);
 }
 
 /**
