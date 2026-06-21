@@ -423,6 +423,7 @@ async function renderProjectDetail(projectId) {
     item.className = 'admin-image-item';
     item.dataset.id = img.id;
     if (img.isFullWidth) item.dataset.isFullWidth = 'true';
+    if (img.isShort) item.dataset.isShort = 'true';
 
     const imgSrc = img.type === 'youtube' 
       ? `https://img.youtube.com/vi/${img.youtubeId}/hqdefault.jpg`
@@ -432,10 +433,16 @@ async function renderProjectDetail(projectId) {
       ? '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; pointer-events: none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>'
       : '';
 
+    const ratioBtnHtml = img.type === 'youtube' ? `
+      <button class="ratio-btn ${img.isShort ? 'active' : ''}" title="Chuyển Video Dọc/Ngang">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2" ry="2"></rect></svg>
+      </button>` : '';
+
     item.innerHTML = `
       <img src="${imgSrc}" alt="Media ${index + 1}" loading="lazy">
       ${ytOverlay}
       <span class="order-badge">${index + 1}</span>
+      ${ratioBtnHtml}
       <button class="expand-btn ${img.isFullWidth ? 'active' : ''}" title="Phóng to 1 dòng">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-expand"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8M3 21l6-6M3 21v-4.8M3 21h4.8M3 3l6 6M3 3v4.8M3 3h4.8M21 3l-6 6M21 3v4.8M21 3h-4.8"/></svg>
       </button>
@@ -453,13 +460,31 @@ async function renderProjectDetail(projectId) {
         item.querySelector('.expand-btn').classList.remove('active');
       }
 
-      // Update currentImages array so layout function knows
       const imgData = currentImages.find(i => i.id === img.id);
       if (imgData) imgData.isFullWidth = newStatus;
 
       layoutJustifiedGrid(currentImages, imageGrid);
       if (saveBtn) saveBtn.style.display = 'block';
     });
+
+    // Nút chuyển tỷ lệ Video Dọc/Ngang (chỉ YouTube)
+    const ratioBtn = item.querySelector('.ratio-btn');
+    if (ratioBtn) {
+      ratioBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newShort = item.dataset.isShort !== 'true';
+        item.dataset.isShort = newShort ? 'true' : 'false';
+
+        if (newShort) ratioBtn.classList.add('active');
+        else ratioBtn.classList.remove('active');
+
+        const imgData = currentImages.find(i => i.id === img.id);
+        if (imgData) imgData.isShort = newShort;
+
+        layoutJustifiedGrid(currentImages, imageGrid);
+        if (saveBtn) saveBtn.style.display = 'block';
+      });
+    }
 
     item.querySelector('.delete-btn').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1139,7 +1164,8 @@ export async function initAdminPage() {
           const ref = doc(db, 'projects', selectedProjectId, 'images', imgId);
           batch.update(ref, { 
             order: index,
-            isFullWidth: item.dataset.isFullWidth === 'true'
+            isFullWidth: item.dataset.isFullWidth === 'true',
+            isShort: item.dataset.isShort === 'true'
           });
         });
 

@@ -170,13 +170,19 @@ function renderMosaicGrid(images, container) {
       
       let hoverTimer;
 
+      const createIframe = () => {
+        const el = document.createElement('iframe');
+        el.src = `https://www.youtube.com/embed/${img.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${img.youtubeId}`;
+        el.style = 'position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 10; pointer-events: none;';
+        el.allow = 'autoplay; encrypted-media';
+        return el;
+      };
+
       item.addEventListener('mouseenter', () => {
         muteBtn.style.display = 'flex';
         hoverTimer = setTimeout(() => {
           if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.src = `https://www.youtube.com/embed/${img.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${img.youtubeId}&enablejsapi=1`;
-            iframe.style = 'position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 10; pointer-events: none;';
+            iframe = createIframe();
             item.appendChild(iframe);
           }
         }, 300);
@@ -193,15 +199,20 @@ function renderMosaicGrid(images, container) {
 
       muteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         isMuted = !isMuted;
         if (isMuted) {
           iconMute.style.display = 'block';
           iconUnmute.style.display = 'none';
-          if (iframe) iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":[]}', '*');
         } else {
           iconMute.style.display = 'none';
           iconUnmute.style.display = 'block';
-          if (iframe) iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":[]}', '*');
+        }
+        // Tạo lại iframe với tham số mute mới
+        if (iframe) {
+          iframe.remove();
+          iframe = createIframe();
+          item.appendChild(iframe);
         }
       });
     }
@@ -238,6 +249,18 @@ function openLightbox(images, index) {
     img.style.display = 'none';
     iframe.style.display = 'block';
     iframe.src = `https://www.youtube.com/embed/${media.youtubeId}?autoplay=1`;
+    // Điều chỉnh kích thước lightbox theo tỉ lệ video
+    if (media.isShort) {
+      iframe.style.width = '45vh';
+      iframe.style.maxWidth = '405px';
+      iframe.style.height = '80vh';
+      iframe.style.maxHeight = '720px';
+    } else {
+      iframe.style.width = '80vw';
+      iframe.style.maxWidth = '1280px';
+      iframe.style.height = '80vh';
+      iframe.style.maxHeight = '720px';
+    }
   } else {
     iframe.style.display = 'none';
     iframe.src = '';

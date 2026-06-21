@@ -101,3 +101,9 @@
 .lightbox-close:hover {
   background: rgba(0, 0, 0, 0.1);
 }
+
+/* YouTube mute button on mosaic items */
+.mosaic-item .yt-mute-btn {
+  pointer-events: auto;
+  z-index: 20;
+}
