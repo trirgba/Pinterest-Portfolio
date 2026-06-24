@@ -313,7 +313,7 @@ async function renderProjectListForSection(sectionId) {
       const card = document.createElement('div');
       card.className = 'project-card-admin animate-fade-in';
       const [img1, img2, img3] = project.images || [];
-      const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/hqdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
+      const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/maxresdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
 
       card.innerHTML = `
         <div class="project-thumb">
@@ -426,7 +426,7 @@ async function renderProjectDetail(projectId) {
     if (img.isShort) item.dataset.isShort = 'true';
 
     const imgSrc = img.type === 'youtube' 
-      ? `https://img.youtube.com/vi/${img.youtubeId}/hqdefault.jpg`
+      ? `https://img.youtube.com/vi/${img.youtubeId}/maxresdefault.jpg`
       : getOptimizedUrl(img.cloudinaryId, { width: 800 });
 
     const ytOverlay = img.type === 'youtube' 

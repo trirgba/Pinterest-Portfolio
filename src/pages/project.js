@@ -150,7 +150,7 @@ function renderMosaicGrid(images, container, options = {}) {
 
     const isYt = img.type === 'youtube';
     const imgSrc = isYt 
-      ? `https://img.youtube.com/vi/${img.youtubeId}/hqdefault.jpg`
+      ? `https://img.youtube.com/vi/${img.youtubeId}/maxresdefault.jpg`
       : getOptimizedUrl(img.cloudinaryId, { width: 800 });
 
     const ytOverlay = isYt 

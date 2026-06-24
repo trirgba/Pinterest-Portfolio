@@ -112,7 +112,7 @@ function renderProjectCard(project) {
   const [img1, img2, img3] = project.images;
 
   const getSeoAlt = (index) => `${project.name} - ${SITE_CONFIG.title} - Ảnh ${index}`;
-  const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/hqdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
+  const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/maxresdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
 
   card.innerHTML = `
     <div class="project-thumb">
