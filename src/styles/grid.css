@@ -107,3 +107,29 @@
   pointer-events: auto;
   z-index: 20;
 }
+
+/* Shorts Grid for Home Page Section 4 */
+.shorts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--global-gap, 16px);
+}
+
+@media (max-width: 1024px) {
+  .shorts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .shorts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+.short-project-btn:hover {
+  background: var(--color-bg) !important;
+  color: var(--color-accent) !important;
+  border-color: var(--color-text-muted) !important;
+}

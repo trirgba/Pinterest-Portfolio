@@ -74,11 +74,19 @@ async function fetchProjectsBySection(sectionId) {
 
   for (const doc of snapshot.docs) {
     const data = doc.data();
-    const imagesQuery = query(
-      collection(db, 'projects', doc.id, 'images'),
-      orderBy('order', 'asc'),
-      limit(3)
-    );
+    let imagesQuery;
+    if (sectionId === '4') {
+      imagesQuery = query(
+        collection(db, 'projects', doc.id, 'images'),
+        orderBy('order', 'asc')
+      );
+    } else {
+      imagesQuery = query(
+        collection(db, 'projects', doc.id, 'images'),
+        orderBy('order', 'asc'),
+        limit(3)
+      );
+    }
     const imagesSnap = await getDocs(imagesQuery);
     const images = imagesSnap.docs.map((imgDoc) => ({
       id: imgDoc.id,
@@ -163,6 +171,121 @@ function renderSkeletons(container, count = 3) {
 }
 
 /**
+ * Render section 4: Hiển thị tối đa 4 video ngẫu nhiên, chia 4 cột, kèm hover autoplay và nút tới project.
+ */
+function renderShortsSection(projects, container) {
+  container.className = 'shorts-grid'; // Đổi class để dùng CSS 4 cột
+  const allShorts = [];
+
+  projects.forEach((project) => {
+    if (project.images) {
+      project.images.forEach((img) => {
+        if (img.type === 'youtube') {
+          allShorts.push({
+            ...img,
+            projectId: project.id,
+            projectSlug: project.slug,
+            projectName: project.name,
+          });
+        }
+      });
+    }
+  });
+
+  // Shuffle mảng và lấy tối đa 4 video
+  allShorts.sort(() => 0.5 - Math.random());
+  const selectedShorts = allShorts.slice(0, 4);
+
+  selectedShorts.forEach((short, index) => {
+    const item = document.createElement('div');
+    item.className = 'short-item animate-fade-in';
+    item.style.animationDelay = `${index * 60}ms`;
+
+    const urlParam = short.projectSlug ? `slug=${short.projectSlug}` : `id=${short.projectId}`;
+    const imgSrc = `https://img.youtube.com/vi/${short.youtubeId}/maxresdefault.jpg`;
+
+    // Giao diện: hình ảnh, nút play overlay, nút chuyển tới project
+    item.innerHTML = `
+      <div class="short-video-container" style="position: relative; width: 100%; aspect-ratio: ${short.isShort ? '9/16' : '16/9'}; border-radius: var(--radius-card); overflow: hidden; cursor: pointer; background: #000;">
+        <img src="${imgSrc}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block; position: relative; z-index: 1;">
+        <div class="yt-overlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; pointer-events: none;">
+          <div style="background: rgba(0,0,0,0.6); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </div>
+        </div>
+        <button class="yt-mute-btn" style="position: absolute; bottom: 8px; right: 8px; width: 32px; height: 32px; background: rgba(0,0,0,0.6); border-radius: 50%; color: white; border: none; cursor: pointer; z-index: 20; display: none; align-items: center; justify-content: center; pointer-events: auto;">
+          <svg class="icon-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+          <svg class="icon-unmute" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+        </button>
+      </div>
+      <a href="/project.html?${urlParam}" class="short-project-btn" style="display: block; margin-top: 12px; padding: 10px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; text-align: center; font-size: 14px; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all var(--transition-fast);">
+        Xem Project: ${short.projectName}
+      </a>
+    `;
+
+    const videoContainer = item.querySelector('.short-video-container');
+    const muteBtn = item.querySelector('.yt-mute-btn');
+    const iconMute = item.querySelector('.icon-mute');
+    const iconUnmute = item.querySelector('.icon-unmute');
+    let iframe = null;
+    let isMuted = true;
+    let hoverTimer;
+
+    const createIframe = () => {
+      const el = document.createElement('iframe');
+      el.src = `https://www.youtube.com/embed/${short.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${short.youtubeId}`;
+      el.style = 'position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 10; pointer-events: none;';
+      el.allow = 'autoplay; encrypted-media';
+      return el;
+    };
+
+    videoContainer.addEventListener('mouseenter', () => {
+      muteBtn.style.display = 'flex';
+      hoverTimer = setTimeout(() => {
+        if (!iframe) {
+          iframe = createIframe();
+          videoContainer.appendChild(iframe);
+        }
+      }, 300);
+    });
+
+    videoContainer.addEventListener('mouseleave', () => {
+      clearTimeout(hoverTimer);
+      muteBtn.style.display = 'none';
+      if (iframe) {
+        iframe.remove();
+        iframe = null;
+      }
+    });
+
+    muteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      isMuted = !isMuted;
+      if (isMuted) {
+        iconMute.style.display = 'block';
+        iconUnmute.style.display = 'none';
+      } else {
+        iconMute.style.display = 'none';
+        iconUnmute.style.display = 'block';
+      }
+      if (iframe) {
+        iframe.remove();
+        iframe = createIframe();
+        videoContainer.appendChild(iframe);
+      }
+    });
+
+    // Khi click vào video thì chuyển hướng tới project
+    videoContainer.addEventListener('click', () => {
+      window.location.href = `/project.html?${urlParam}`;
+    });
+
+    container.appendChild(item);
+  });
+}
+
+/**
  * Initialize trang chủ — multi-section
  */
 export async function initHomePage() {
@@ -205,9 +328,14 @@ export async function initHomePage() {
 
       // Hiện section và render cards
       sectionEl.style.display = '';
-      projects.forEach((project) => {
-        gridEl.appendChild(renderProjectCard(project));
-      });
+      
+      if (section.id === '4') {
+        renderShortsSection(projects, gridEl);
+      } else {
+        projects.forEach((project) => {
+          gridEl.appendChild(renderProjectCard(project));
+        });
+      }
     } catch (error) {
       console.error(`Error loading section ${section.id}:`, error);
       // Ẩn section nếu lỗi
