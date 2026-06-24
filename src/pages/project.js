@@ -22,12 +22,17 @@ import { getCurrentUser } from '../auth.js';
 /**
  * Thuật toán Justified Image Grid (Phong cách Behance/Flickr)
  */
-export function layoutJustifiedGrid(images, container) {
+export function layoutJustifiedGrid(images, container, options = {}) {
   const containerWidth = container.clientWidth;
   if (!containerWidth) return;
 
   const gap = 16;
-  const targetHeight = window.innerWidth <= 768 ? 150 : 300;
+  const section = options.section || null;
+  // Section 4: targetHeight thấp hơn để 4 video shorts (9:16) vừa 1 hàng
+  let targetHeight = window.innerWidth <= 768 ? 150 : 300;
+  if (section === '4') {
+    targetHeight = window.innerWidth <= 768 ? 180 : 420;
+  }
   
   let currentRow = [];
   let currentRowWidth = 0;
@@ -130,7 +135,7 @@ async function fetchProjectDetail(projectIdOrSlug) {
 /**
  * Render mosaic grid
  */
-function renderMosaicGrid(images, container) {
+function renderMosaicGrid(images, container, options = {}) {
   container.innerHTML = '';
 
   images.forEach((img, index) => {
@@ -225,7 +230,7 @@ function renderMosaicGrid(images, container) {
 
   // Calculate layout using RequestAnimationFrame to ensure container has width
   requestAnimationFrame(() => {
-    layoutJustifiedGrid(images, container);
+    layoutJustifiedGrid(images, container, options);
   });
 }
 
@@ -375,14 +380,15 @@ export async function initProjectPage() {
     }
 
     if (grid && project.images.length > 0) {
-      renderMosaicGrid(project.images, grid);
+      const gridOptions = { section: project.section };
+      renderMosaicGrid(project.images, grid, gridOptions);
       
       // Lắng nghe resize với debounce để tránh giật lag
       let resizeTimer;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-          layoutJustifiedGrid(project.images, grid);
+          layoutJustifiedGrid(project.images, grid, gridOptions);
         }, 100);
       });
       
