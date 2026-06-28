@@ -31,7 +31,12 @@ export function layoutJustifiedGrid(images, container, options = {}) {
   // Section 4: targetHeight thấp hơn để 4 video shorts (9:16) vừa 1 hàng
   let targetHeight = window.innerWidth <= 768 ? 150 : 300;
   if (section === '4') {
-    targetHeight = window.innerWidth <= 768 ? 180 : 420;
+    // 2 columns on mobile, 4 columns on desktop exactly
+    if (window.innerWidth <= 768) {
+      targetHeight = (containerWidth / 2 - gap) / (9/16);
+    } else {
+      targetHeight = (containerWidth / 4 - gap) / (9/16);
+    }
   }
   
   let currentRow = [];
@@ -39,13 +44,16 @@ export function layoutJustifiedGrid(images, container, options = {}) {
   
   const itemElements = Array.from(container.children);
 
-  const processRow = (row, rowWidth, forceFullWidth) => {
+  const processRow = (row, rowWidth, stretch = true) => {
     if (row.length === 0) return;
-    const gapsWidth = (row.length - 1) * gap;
-    const availableWidth = containerWidth - gapsWidth;
-    // Stretch to full width
-    const scale = availableWidth / rowWidth;
-    const finalHeight = targetHeight * scale;
+    
+    let finalHeight = targetHeight;
+    if (stretch) {
+      const gapsWidth = (row.length - 1) * gap;
+      const availableWidth = containerWidth - gapsWidth;
+      const scale = availableWidth / rowWidth;
+      finalHeight = targetHeight * scale;
+    }
 
     row.forEach((rowItem) => {
       const itemWidth = rowItem.ratio * finalHeight;
@@ -85,8 +93,9 @@ export function layoutJustifiedGrid(images, container, options = {}) {
     }
   });
 
-  // Xử lý hàng cuối cùng (kéo căng full dòng theo yêu cầu mới)
-  processRow(currentRow, currentRowWidth, false);
+  // Xử lý hàng cuối cùng (không kéo căng nếu là section 4)
+  const stretchLastRow = section === '4' ? false : true;
+  processRow(currentRow, currentRowWidth, stretchLastRow);
 }
 
 /**
@@ -155,10 +164,15 @@ function renderMosaicGrid(images, container, options = {}) {
 
     const ytOverlay = isYt 
       ? `<div class="yt-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 2;"><svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
-         <button class="yt-mute-btn" style="position: absolute; bottom: 8px; right: 8px; width: 32px; height: 32px; background: rgba(0,0,0,0.6); border-radius: 50%; color: white; border: none; cursor: pointer; z-index: 20; display: none; align-items: center; justify-content: center;">
-           <svg class="icon-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-           <svg class="icon-unmute" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-         </button>`
+         <div class="yt-controls" style="position: absolute; bottom: 8px; right: 8px; display: flex; gap: 8px; z-index: 20;">
+           <button class="yt-mute-btn" style="width: 32px; height: 32px; background: rgba(0,0,0,0.6); border-radius: 50%; color: white; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; pointer-events: auto;">
+             <svg class="icon-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+             <svg class="icon-unmute" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+           </button>
+           <button class="yt-maximize-btn" style="width: 32px; height: 32px; background: rgba(0,0,0,0.6); border-radius: 50%; color: white; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; pointer-events: auto;">
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+           </button>
+         </div>`
       : '';
 
     item.innerHTML = `
@@ -170,10 +184,13 @@ function renderMosaicGrid(images, container, options = {}) {
       let iframe = null;
       let isMuted = true;
       const muteBtn = item.querySelector('.yt-mute-btn');
+      const maxBtn = item.querySelector('.yt-maximize-btn');
       const iconMute = item.querySelector('.icon-mute');
       const iconUnmute = item.querySelector('.icon-unmute');
       
       let hoverTimer;
+      let isPlaying = false;
+      const isHoverCapable = window.matchMedia('(hover: hover)').matches;
 
       const createIframe = () => {
         const el = document.createElement('iframe');
@@ -183,22 +200,43 @@ function renderMosaicGrid(images, container, options = {}) {
         return el;
       };
 
-      item.addEventListener('mouseenter', () => {
+      const playVideo = () => {
+        isPlaying = true;
         muteBtn.style.display = 'flex';
-        hoverTimer = setTimeout(() => {
-          if (!iframe) {
-            iframe = createIframe();
-            item.appendChild(iframe);
-          }
-        }, 300);
-      });
+        maxBtn.style.display = 'flex';
+        if (!iframe) {
+          iframe = createIframe();
+          item.appendChild(iframe);
+        }
+      };
 
-      item.addEventListener('mouseleave', () => {
-        clearTimeout(hoverTimer);
+      const pauseVideo = () => {
+        isPlaying = false;
         muteBtn.style.display = 'none';
+        maxBtn.style.display = 'none';
         if (iframe) {
           iframe.remove();
           iframe = null;
+        }
+      };
+
+      if (isHoverCapable) {
+        item.addEventListener('mouseenter', () => {
+          hoverTimer = setTimeout(playVideo, 300);
+        });
+
+        item.addEventListener('mouseleave', () => {
+          clearTimeout(hoverTimer);
+          pauseVideo();
+        });
+      }
+
+      item.addEventListener('click', (e) => {
+        // Toggle play/pause on click for both mobile and desktop
+        if (isPlaying) {
+          pauseVideo();
+        } else {
+          playVideo();
         }
       });
 
@@ -220,10 +258,16 @@ function renderMosaicGrid(images, container, options = {}) {
           item.appendChild(iframe);
         }
       });
-    }
 
-    // Click to open lightbox
-    item.addEventListener('click', () => openLightbox(images, index));
+      maxBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        openLightbox(images, index);
+      });
+    } else {
+      // Ảnh bình thường: click to open lightbox
+      item.addEventListener('click', () => openLightbox(images, index));
+    }
 
     container.appendChild(item);
   });
