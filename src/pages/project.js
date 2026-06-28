@@ -190,11 +190,13 @@ function renderMosaicGrid(images, container, options = {}) {
       
       let hoverTimer;
       let isPlaying = false;
+      let isLocked = false;
       const isHoverCapable = window.matchMedia('(hover: hover)').matches;
 
       const createIframe = () => {
         const el = document.createElement('iframe');
-        el.src = `https://www.youtube.com/embed/${img.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${img.youtubeId}`;
+        // Thêm modestbranding, rel=0, iv_load_policy=3 để ẩn tối đa UI YouTube
+        el.src = `https://www.youtube.com/embed/${img.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${img.youtubeId}&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1`;
         el.style = 'position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 10; pointer-events: none;';
         el.allow = 'autoplay; encrypted-media';
         return el;
@@ -222,17 +224,24 @@ function renderMosaicGrid(images, container, options = {}) {
 
       if (isHoverCapable) {
         item.addEventListener('mouseenter', () => {
-          hoverTimer = setTimeout(playVideo, 300);
+          if (!isLocked) {
+            hoverTimer = setTimeout(playVideo, 300);
+          }
         });
 
         item.addEventListener('mouseleave', () => {
           clearTimeout(hoverTimer);
-          pauseVideo();
+          if (!isLocked) {
+            pauseVideo();
+          }
         });
       }
 
       item.addEventListener('click', (e) => {
-        // Toggle play/pause on click for both mobile and desktop
+        // Khóa trạng thái khi user chủ động click
+        isLocked = true;
+        
+        // Toggle play/pause
         if (isPlaying) {
           pauseVideo();
         } else {

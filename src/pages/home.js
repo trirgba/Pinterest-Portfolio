@@ -230,31 +230,61 @@ function renderShortsSection(projects, container) {
     let iframe = null;
     let isMuted = true;
     let hoverTimer;
+    let isPlaying = false;
+    let isLocked = false;
+    const isHoverCapable = window.matchMedia('(hover: hover)').matches;
 
     const createIframe = () => {
       const el = document.createElement('iframe');
-      el.src = `https://www.youtube.com/embed/${short.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${short.youtubeId}`;
+      el.src = `https://www.youtube.com/embed/${short.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${short.youtubeId}&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1`;
       el.style = 'position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 10; pointer-events: none;';
       el.allow = 'autoplay; encrypted-media';
       return el;
     };
 
-    videoContainer.addEventListener('mouseenter', () => {
+    const playVideo = () => {
+      isPlaying = true;
       muteBtn.style.display = 'flex';
-      hoverTimer = setTimeout(() => {
-        if (!iframe) {
-          iframe = createIframe();
-          videoContainer.appendChild(iframe);
-        }
-      }, 300);
-    });
+      if (!iframe) {
+        iframe = createIframe();
+        videoContainer.appendChild(iframe);
+      }
+    };
 
-    videoContainer.addEventListener('mouseleave', () => {
-      clearTimeout(hoverTimer);
+    const pauseVideo = () => {
+      isPlaying = false;
       muteBtn.style.display = 'none';
       if (iframe) {
         iframe.remove();
         iframe = null;
+      }
+    };
+
+    if (isHoverCapable) {
+      videoContainer.addEventListener('mouseenter', () => {
+        if (!isLocked) {
+          hoverTimer = setTimeout(playVideo, 300);
+        }
+      });
+
+      videoContainer.addEventListener('mouseleave', () => {
+        clearTimeout(hoverTimer);
+        if (!isLocked) {
+          pauseVideo();
+        }
+      });
+    }
+
+    // Khi click vào video thì toggle play/pause thay vì chuyển tới project (do người dùng muốn thao tác ngay tại home)
+    // Wait, the user said "nhấn vào video để play hoặc dùng" (on mobile), but previously videoContainer click went to project page.
+    // If videoContainer click is play/pause, they can use the "Xem Project" button to go to project page.
+    videoContainer.addEventListener('click', (e) => {
+      e.preventDefault();
+      isLocked = true;
+      if (isPlaying) {
+        pauseVideo();
+      } else {
+        playVideo();
       }
     });
 
@@ -276,10 +306,8 @@ function renderShortsSection(projects, container) {
       }
     });
 
-    // Khi click vào video thì chuyển hướng tới project
-    videoContainer.addEventListener('click', () => {
-      window.location.href = `/project.html?${urlParam}`;
-    });
+    // Đã xử lý click ở trên, xóa event listener cũ
+
 
     container.appendChild(item);
   });
