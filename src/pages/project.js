@@ -197,7 +197,7 @@ function renderMosaicGrid(images, container, options = {}) {
         const el = document.createElement('iframe');
         // Thêm modestbranding, rel=0, iv_load_policy=3 để ẩn tối đa UI YouTube
         el.src = `https://www.youtube.com/embed/${img.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${img.youtubeId}&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1`;
-        el.style = 'position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 10; pointer-events: none;';
+        el.style = 'position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 10; pointer-events: none; transform: scale(1.3);';
         el.allow = 'autoplay; encrypted-media';
         return el;
       };
