@@ -275,9 +275,7 @@ function renderShortsSection(projects, container) {
       });
     }
 
-    // Khi click vào video thì toggle play/pause thay vì chuyển tới project (do người dùng muốn thao tác ngay tại home)
-    // Wait, the user said "nhấn vào video để play hoặc dùng" (on mobile), but previously videoContainer click went to project page.
-    // If videoContainer click is play/pause, they can use the "Xem Project" button to go to project page.
+    // Khi click vào video thì toggle play/pause
     videoContainer.addEventListener('click', (e) => {
       e.preventDefault();
       isLocked = true;
@@ -306,10 +304,12 @@ function renderShortsSection(projects, container) {
       }
     });
 
-    // Đã xử lý click ở trên, xóa event listener cũ
-
-
     container.appendChild(item);
+
+    // Tự động phát video đầu tiên
+    if (index === 0) {
+      playVideo();
+    }
   });
 }
 
