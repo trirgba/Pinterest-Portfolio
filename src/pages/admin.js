@@ -1127,29 +1127,45 @@ async function setupCloudinaryUsageWidget() {
         storageUsedGB = (data.storage.usage / (1024 * 1024 * 1024)).toFixed(2);
       }
 
+      let bandwidthUsedGB = 0;
+      if (data.bandwidth && data.bandwidth.usage) {
+        bandwidthUsedGB = (data.bandwidth.usage / (1024 * 1024 * 1024)).toFixed(2);
+      }
+
       let percentNum = 0;
       let limitText = '?';
+      let creditUsedText = '?';
 
       if (data.credits) {
         percentNum = data.credits.used_percent || 0;
-        limitText = data.credits.limit ? `${data.credits.limit} Credits` : '?';
+        limitText = data.credits.limit ? `${data.credits.limit}` : '?';
+        creditUsedText = data.credits.usage ? `${data.credits.usage.toFixed(2)}` : '?';
       } else if (data.storage && data.storage.limit) {
         percentNum = data.storage.used_percent || 0;
         limitText = `${(data.storage.limit / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+        creditUsedText = storageUsedGB;
       }
 
       const percent = Number(percentNum).toFixed(1);
 
       container.innerHTML = `
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-          <span>Đã lưu trữ: <strong>${storageUsedGB} GB</strong> / Giới hạn: ${limitText}</span>
+          <span>Tổng Credits tiêu thụ: <strong>${creditUsedText}</strong> / Giới hạn: ${limitText}</span>
           <span style="font-weight: 600; color: ${percent > 80 ? 'var(--color-danger)' : 'var(--color-primary)'};">${percent}%</span>
         </div>
-        <div style="width: 100%; height: 8px; background: var(--color-border); border-radius: 4px; overflow: hidden;">
+        <div style="width: 100%; height: 8px; background: var(--color-border); border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
           <div style="width: ${percent}%; height: 100%; background: ${percent > 80 ? 'var(--color-danger)' : 'var(--color-primary)'}; transition: width 0.3s ease;"></div>
         </div>
-        <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 8px;">
-          Gói hiện tại: ${data.plan}
+        
+        <div style="display: flex; gap: 16px; font-size: 12px; color: var(--color-text-muted);">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+            Lưu trữ (Storage): <strong style="color: var(--color-text);">${storageUsedGB} GB</strong>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="m18 20 4-4-4-4"/><path d="m6 20-4-4 4-4"/></svg>
+            Băng thông 30 ngày qua: <strong style="color: var(--color-text);">${bandwidthUsedGB} GB</strong>
+          </div>
         </div>
       `;
     } catch (err) {
