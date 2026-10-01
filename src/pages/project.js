@@ -62,7 +62,7 @@ export function layoutJustifiedGrid(images, container, options = {}) {
     });
   };
 
-  images.forEach((img, index) => {
+  images.forEach((img, index) =\u003e {
     let ratio = 1;
     if (img.width && img.height) {
       ratio = img.width / img.height;
@@ -71,7 +71,11 @@ export function layoutJustifiedGrid(images, container, options = {}) {
     }
     const itemWidthAtTarget = ratio * targetHeight;
 
-    if (img.isFullWidth) {
+    // Ảnh ngang cực rộng (ratio > 2, vd: banner 4:1) hoặc đánh dấu isFullWidth
+    // → tự động chiếm full row, tránh bị bẹp khi ghép với ảnh khác
+    const isWideImage = ratio > 2;
+
+    if (img.isFullWidth || isWideImage) {
       // Process current row first
       processRow(currentRow, currentRowWidth, false);
       currentRow = [];
@@ -158,9 +162,12 @@ function renderMosaicGrid(images, container, options = {}) {
     const seoAlt = `${projectName} - ${SITE_CONFIG.title} - Ảnh ${index + 1}`;
 
     const isYt = img.type === 'youtube';
+    // Lấy chiều rộng container để request ảnh đúng kích thước, tránh mờ khi full-width
+    const containerW = container.clientWidth || window.innerWidth;
+    const imgW = Math.min(Math.round(containerW * (window.devicePixelRatio || 1)), 2400);
     const imgSrc = isYt 
       ? `https://img.youtube.com/vi/${img.youtubeId}/maxresdefault.jpg`
-      : getOptimizedUrl(img.cloudinaryId, { width: 800 });
+      : getOptimizedUrl(img.cloudinaryId, { width: imgW });
 
     const ytOverlay = isYt 
       ? `<div class="yt-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.6); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 2;"><svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>
