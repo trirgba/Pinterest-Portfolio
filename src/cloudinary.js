@@ -24,15 +24,15 @@ async function compressImage(file) {
     maxSizeMB: 3,           // Giới hạn tối đa 3MB sau khi nén
     maxWidthOrHeight: 4000, // Giữ nguyên ảnh lớn lên đến 4000px
     useWebWorker: true,     // Chạy trên Web Worker để không block UI
-    fileType: 'image/webp', // Chuyển sang WebP ngay tại client
     initialQuality: 0.95,   // Chất lượng 95% — gần như không mất mát, phù hợp ảnh thiết kế
+    fileType: 'image/webp', // Convert sang WebP để tiết kiệm dung lượng lưu trữ trên Cloudinary
   };
 
   const compressed = await imageCompression(file, options);
 
-  // Giữ tên file gốc nhưng đổi đuôi thành .webp
-  const newName = file.name.replace(/\.[^.]+$/, '') + '.webp';
-  return new File([compressed], newName, { type: 'image/webp' });
+  // Tạo File object từ blob, giữ tên gốc nhưng đổi đuôi thành .webp
+  const webpName = file.name.replace(/\.[^.]+$/, '') + '.webp';
+  return new File([compressed], webpName, { type: 'image/webp', lastModified: Date.now() });
 }
 
 /**
