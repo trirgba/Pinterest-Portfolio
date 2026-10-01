@@ -1,6 +1,6 @@
 # Project Handoff
 
-Last commit: 3cbc894
+Last commit: 9a81dd0
 
 ## 1. Tóm tắt dự án & Tech Stack
 - **Dự án**: Pinterest-Portfolio (Trang portfolio dạng lưới hình ảnh giống Pinterest).
@@ -11,6 +11,7 @@ Last commit: 3cbc894
 - Đã có API và giao diện hiển thị thống kê dung lượng Cloudinary trực tiếp trên Dashboard.
 
 ## 3. Thay đổi gần nhất
+- **01/10/2026**: Cài đặt thư viện `cloudinary` vào package.json để fix lỗi 500 khi Vercel chạy API `cloudinary-usage`. Thêm thuộc tính `autocomplete` vào các ô nhập mật khẩu.
 - **01/10/2026**: Thêm Vercel Serverless Function `api/cloudinary-usage.js` để lấy dữ liệu dung lượng Cloudinary bằng Admin API.
 - **01/10/2026**: Thêm widget tiến độ dung lượng (Progress Bar) vào `admin/dashboard.html` và fetch/render data trong `src/pages/admin.js`.
 

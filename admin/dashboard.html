@@ -324,10 +324,10 @@
         <h3>Thay đổi Admin Code</h3>
         <form id="form-change-code">
           <div class="form-group">
-            <input type="password" id="input-old-code" placeholder="Code hiện tại" required>
+            <input type="password" id="input-old-code" placeholder="Code hiện tại" required autocomplete="current-password">
           </div>
           <div class="form-group" style="display: flex; gap: 8px;">
-            <input type="password" id="input-new-code" placeholder="Code mới" required style="flex: 1;">
+            <input type="password" id="input-new-code" placeholder="Code mới" required style="flex: 1;" autocomplete="new-password">
             <button type="submit" class="btn-primary btn-sm">Lưu</button>
           </div>
           <div id="code-msg" style="font-size: 13px; margin-top: 4px;"></div>
