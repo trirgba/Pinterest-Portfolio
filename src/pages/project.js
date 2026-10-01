@@ -76,8 +76,8 @@ export function layoutJustifiedGrid(images, container, options = {}) {
     const isWideImage = ratio > 2;
 
     if (img.isFullWidth || isWideImage) {
-      // Process current row first
-      processRow(currentRow, currentRowWidth, false);
+      // Process current row first — stretch vì hàng trước đã đủ item
+      processRow(currentRow, currentRowWidth, true);
       currentRow = [];
       currentRowWidth = 0;
 
@@ -88,7 +88,7 @@ export function layoutJustifiedGrid(images, container, options = {}) {
       el.style.height = `${finalHeight}px`;
     } else {
       if (currentRow.length > 0 && currentRowWidth + itemWidthAtTarget + (currentRow.length * gap) > containerWidth) {
-        processRow(currentRow, currentRowWidth, false);
+        processRow(currentRow, currentRowWidth, true);
         currentRow = [];
         currentRowWidth = 0;
       }
