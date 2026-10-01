@@ -1097,6 +1097,58 @@ async function setupAnalyticsSection() {
 // INIT (Multi-Section)
 // ==========================================
 
+// ==========================================
+// CLOUDINARY USAGE
+// ==========================================
+
+async function setupCloudinaryUsageWidget() {
+  const container = document.getElementById('usage-stats-container');
+  const refreshBtn = document.getElementById('btn-refresh-usage');
+  if (!container) return;
+
+  const fetchUsage = async () => {
+    try {
+      container.innerHTML = '<div style="font-size: 13px; color: var(--color-text-muted);">Đang tải dữ liệu...</div>';
+      if (refreshBtn) refreshBtn.style.opacity = '0.5';
+
+      const idToken = await currentUser.getIdToken();
+      const res = await fetch('/api/cloudinary-usage', {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch');
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'API Error');
+
+      const data = json.data;
+      const storageUsed = (data.storage.usage / (1024 * 1024 * 1024)).toFixed(2);
+      const storageLimit = (data.storage.limit / (1024 * 1024 * 1024)).toFixed(2);
+      const percent = data.storage.used_percent.toFixed(1);
+
+      container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
+          <span>Đã dùng: <strong>${storageUsed} GB</strong> / ${storageLimit} GB</span>
+          <span style="font-weight: 600; color: ${percent > 80 ? 'var(--color-danger)' : 'var(--color-primary)'};">${percent}%</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: var(--color-border); border-radius: 4px; overflow: hidden;">
+          <div style="width: ${percent}%; height: 100%; background: ${percent > 80 ? 'var(--color-danger)' : 'var(--color-primary)'}; transition: width 0.3s ease;"></div>
+        </div>
+        <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 8px;">
+          Gói hiện tại: ${data.plan}
+        </div>
+      `;
+    } catch (err) {
+      console.error('Lỗi lấy Cloudinary Usage:', err);
+      container.innerHTML = '<div style="font-size: 13px; color: var(--color-danger);">Không thể lấy dữ liệu. Hãy kiểm tra API Secret.</div>';
+    } finally {
+      if (refreshBtn) refreshBtn.style.opacity = '1';
+    }
+  };
+
+  if (refreshBtn) refreshBtn.addEventListener('click', fetchUsage);
+  fetchUsage();
+}
+
 export async function initAdminPage() {
   // Check auth
   onAuthChange((user) => {
@@ -1113,6 +1165,9 @@ export async function initAdminPage() {
     window.location.href = '/admin/';
     return;
   }
+
+  // Khởi tạo Widget hiển thị dung lượng Cloudinary
+  setupCloudinaryUsageWidget();
 
   // Logout button
   const logoutBtn = document.getElementById('btn-logout');
