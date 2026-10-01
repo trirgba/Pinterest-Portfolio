@@ -1121,13 +1121,28 @@ async function setupCloudinaryUsageWidget() {
       if (!json.success) throw new Error(json.error || 'API Error');
 
       const data = json.data;
-      const storageUsed = (data.storage.usage / (1024 * 1024 * 1024)).toFixed(2);
-      const storageLimit = (data.storage.limit / (1024 * 1024 * 1024)).toFixed(2);
-      const percent = data.storage.used_percent.toFixed(1);
+      
+      let storageUsedGB = 0;
+      if (data.storage && data.storage.usage) {
+        storageUsedGB = (data.storage.usage / (1024 * 1024 * 1024)).toFixed(2);
+      }
+
+      let percentNum = 0;
+      let limitText = '?';
+
+      if (data.credits) {
+        percentNum = data.credits.used_percent || 0;
+        limitText = data.credits.limit ? `${data.credits.limit} Credits` : '?';
+      } else if (data.storage && data.storage.limit) {
+        percentNum = data.storage.used_percent || 0;
+        limitText = `${(data.storage.limit / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+      }
+
+      const percent = Number(percentNum).toFixed(1);
 
       container.innerHTML = `
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-          <span>Đã dùng: <strong>${storageUsed} GB</strong> / ${storageLimit} GB</span>
+          <span>Đã lưu trữ: <strong>${storageUsedGB} GB</strong> / Giới hạn: ${limitText}</span>
           <span style="font-weight: 600; color: ${percent > 80 ? 'var(--color-danger)' : 'var(--color-primary)'};">${percent}%</span>
         </div>
         <div style="width: 100%; height: 8px; background: var(--color-border); border-radius: 4px; overflow: hidden;">

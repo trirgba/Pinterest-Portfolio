@@ -323,6 +323,8 @@
       <div class="admin-section">
         <h3>Thay đổi Admin Code</h3>
         <form id="form-change-code">
+          <!-- Hidden username for accessibility -->
+          <input type="text" id="hidden-username" name="username" value="admin" style="display: none;" autocomplete="username">
           <div class="form-group">
             <input type="password" id="input-old-code" placeholder="Code hiện tại" required autocomplete="current-password">
           </div>
