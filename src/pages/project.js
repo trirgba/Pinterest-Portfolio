@@ -62,7 +62,7 @@ export function layoutJustifiedGrid(images, container, options = {}) {
     });
   };
 
-  images.forEach((img, index) =\u003e {
+  images.forEach((img, index) => {
     let ratio = 1;
     if (img.width && img.height) {
       ratio = img.width / img.height;
