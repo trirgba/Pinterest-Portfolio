@@ -328,7 +328,10 @@ function openLightbox(images, index) {
     img.style.animation = 'none';
     void img.offsetHeight;
     img.style.animation = '';
-    img.src = getOptimizedUrl(media.cloudinaryId, { width: 1600 });
+    // Lấy chiều rộng màn hình thực tế (hỗ trợ Retina 2x)
+    // Giới hạn tối đa 3840px (4K) để không request ảnh quá lớn
+    const screenW = Math.min(window.screen.width * (window.devicePixelRatio || 1), 3840);
+    img.src = getOptimizedUrl(media.cloudinaryId, { width: Math.round(screenW) });
   }
 
   overlay.classList.add('active');
