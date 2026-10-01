@@ -549,15 +549,30 @@
 }
 
 .upload-progress-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 8px 0;
   font-size: 13px;
 }
 
+.upload-progress-item .progress-filename {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}
+
+.upload-progress-item .progress-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  min-width: 90px;
+  text-align: right;
+}
+
 .upload-progress-bar {
-  flex: 1;
+  grid-column: 1 / -1;
   height: 4px;
   background: var(--color-border);
   border-radius: 2px;

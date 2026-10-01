@@ -211,18 +211,28 @@ async function uploadImages(projectId, files) {
     const progressItem = document.createElement('div');
     progressItem.className = 'upload-progress-item';
     progressItem.innerHTML = `
-      <span>${file.name}</span>
+      <span class="progress-filename">${file.name}</span>
+      <span class="progress-label">Đang nén...</span>
       <div class="upload-progress-bar"><div class="fill" style="width: 0%"></div></div>
     `;
     if (progressContainer) progressContainer.appendChild(progressItem);
 
-    try {
-      const fill = progressItem.querySelector('.fill');
-      if (fill) fill.style.width = '50%';
+    const fill = progressItem.querySelector('.fill');
+    const label = progressItem.querySelector('.progress-label');
 
+    try {
+      // Bước 1: Nén ảnh
+      if (fill) fill.style.width = '30%';
+      if (label) label.textContent = 'Đang nén...';
+
+      // Bước 2: Upload lên Cloudinary (bao gồm cả bước nén bên trong)
+      if (fill) fill.style.width = '60%';
+      if (label) label.textContent = 'Đang tải lên...';
       const result = await uploadToCloudinary(file);
 
-      // Lưu vào Firestore
+      // Bước 3: Lưu vào Firestore
+      if (fill) fill.style.width = '85%';
+      if (label) label.textContent = 'Đang lưu...';
       await addDoc(collection(db, 'projects', projectId, 'images'), {
         cloudinaryId: result.cloudinaryId,
         url: result.url,
@@ -233,10 +243,12 @@ async function uploadImages(projectId, files) {
       });
 
       if (fill) fill.style.width = '100%';
+      if (label) { label.textContent = 'Hoàn tất ✓'; label.style.color = 'var(--color-success, #22c55e)'; }
       successCount++;
     } catch (error) {
       console.error('Upload failed:', file.name, error);
       progressItem.style.color = 'var(--color-danger)';
+      if (label) label.textContent = 'Lỗi!';
     }
   }
 
