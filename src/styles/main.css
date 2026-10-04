@@ -300,6 +300,16 @@ button {
   background: var(--color-border);
 }
 
+.project-thumb.thumb-single {
+  display: block;
+}
+
+.project-thumb.thumb-single img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Project info */
 .project-info {
   padding-top: calc(var(--global-gap) / 2);

@@ -324,26 +324,54 @@ async function renderProjectListForSection(sectionId) {
     projects.forEach((project) => {
       const card = document.createElement('div');
       card.className = 'project-card-admin animate-fade-in';
-      const [img1, img2, img3] = project.images || [];
       const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/maxresdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
+      let thumbHtml = '';
+      const thumbMode = project.thumbMode || 'auto';
+      const thumbImages = project.thumbImages || [];
+      
+      let finalImages = [];
+      if (thumbMode === 'auto') {
+        finalImages = project.images.slice(0, 3);
+      } else if (thumbMode === 'group3') {
+        finalImages = thumbImages.map(id => project.images.find(img => img.id === id)).filter(Boolean);
+        // Pad if not found
+        while (finalImages.length < 3) finalImages.push(null);
+      } else if (thumbMode === 'single') {
+        const singleImg = project.images.find(img => img.id === thumbImages[0]);
+        if (singleImg) finalImages = [singleImg];
+      }
+
+      if (thumbMode === 'single' && finalImages[0]) {
+        thumbHtml = `
+          <div class="project-thumb thumb-single">
+            <img src="${getMediaUrl(finalImages[0], 800)}" loading="lazy">
+          </div>
+        `;
+      } else {
+        const [img1, img2, img3] = finalImages;
+        thumbHtml = `
+          <div class="project-thumb">
+            <div class="thumb-img-large">
+              ${img1 ? `<img src="${getMediaUrl(img1, 800)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
+            </div>
+            <div class="thumb-img">
+              ${img2 ? `<img src="${getMediaUrl(img2, 400)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
+            </div>
+            <div class="thumb-img">
+              ${img3 ? `<img src="${getMediaUrl(img3, 400)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
+            </div>
+          </div>
+        `;
+      }
 
       card.innerHTML = `
-        <div class="project-thumb">
-          <div class="thumb-img-large">
-            ${img1 ? `<img src="${getMediaUrl(img1, 800)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
-          </div>
-          <div class="thumb-img">
-            ${img2 ? `<img src="${getMediaUrl(img2, 400)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
-          </div>
-          <div class="thumb-img">
-            ${img3 ? `<img src="${getMediaUrl(img3, 400)}" loading="lazy">` : '<div class="thumb-placeholder"></div>'}
-          </div>
-        </div>
+        ${thumbHtml}
         <div class="project-card-admin-body">
           <h3>${project.name}</h3>
           <span class="meta">Thứ tự: ${project.order}</span>
         </div>
         <div class="project-card-admin-actions">
+          <button class="btn-secondary btn-sm thumb-btn" data-id="${project.id}">🖼 Thumb</button>
           <button class="btn-secondary btn-sm view-btn" data-id="${project.id}">Xem & Quản lý</button>
           <button class="btn-icon danger delete-btn" data-id="${project.id}" data-section="${sectionId}" title="Xoá project">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2">
@@ -352,6 +380,11 @@ async function renderProjectListForSection(sectionId) {
           </button>
         </div>
       `;
+
+      card.querySelector('.thumb-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openThumbPicker(project.id, project);
+      });
 
       card.querySelector('.view-btn').addEventListener('click', () => {
         window.open(`/admin/dashboard.html?edit=${project.id}`, '_blank');
@@ -396,6 +429,17 @@ async function renderProjectDetail(projectId) {
   let currentImages = [...images];
 
   const saveBtn = document.getElementById('btn-save-order');
+  
+  const thumbPickerBtn = document.getElementById('btn-open-thumb-picker');
+  if (thumbPickerBtn) {
+    thumbPickerBtn.style.display = 'block';
+    // Remove old event listeners if any
+    const newBtn = thumbPickerBtn.cloneNode(true);
+    thumbPickerBtn.parentNode.replaceChild(newBtn, thumbPickerBtn);
+    newBtn.addEventListener('click', () => {
+      openThumbPicker(project.id, project);
+    });
+  }
 
   const nameInput = document.getElementById('detail-project-name');
   nameInput.value = project.name;
@@ -1191,6 +1235,203 @@ async function setupCloudinaryUsageWidget() {
   if (refreshBtn) refreshBtn.addEventListener('click', fetchUsage);
   fetchUsage();
 }
+// ==========================================
+// THUMBNAIL PICKER
+// ==========================================
+
+let thumbPickerState = {
+  projectId: null,
+  mode: 'auto', // auto, group3, single
+  images: [], // all project images
+  selectedImageIds: [], // group3 (max 3), single (max 1)
+};
+
+function renderThumbPreview() {
+  const previewCard = document.getElementById('thumb-preview-card');
+  if (!previewCard) return;
+
+  const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/maxresdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
+  let finalImages = [];
+
+  if (thumbPickerState.mode === 'auto') {
+    finalImages = thumbPickerState.images.slice(0, 3);
+  } else if (thumbPickerState.mode === 'group3') {
+    finalImages = thumbPickerState.selectedImageIds.map(id => thumbPickerState.images.find(img => img.id === id)).filter(Boolean);
+    while (finalImages.length < 3) finalImages.push(null);
+  } else if (thumbPickerState.mode === 'single') {
+    const singleImg = thumbPickerState.images.find(img => img.id === thumbPickerState.selectedImageIds[0]);
+    if (singleImg) finalImages = [singleImg];
+  }
+
+  let thumbHtml = '';
+  if (thumbPickerState.mode === 'single' && finalImages[0]) {
+    thumbHtml = `
+      <div class="project-thumb thumb-single" style="border: 1px solid var(--color-border); border-radius: var(--radius-card); overflow: hidden;">
+        <img src="${getMediaUrl(finalImages[0], 800)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+      </div>
+    `;
+  } else {
+    const [img1, img2, img3] = finalImages;
+    thumbHtml = `
+      <div class="project-thumb" style="border: 1px solid var(--color-border); border-radius: var(--radius-card); overflow: hidden;">
+        <div class="thumb-img-large">
+          ${img1 ? `<img src="${getMediaUrl(img1, 800)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">` : '<div class="thumb-placeholder" style="width:100%;height:100%;background:#eee;"></div>'}
+        </div>
+        <div class="thumb-img">
+          ${img2 ? `<img src="${getMediaUrl(img2, 400)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">` : '<div class="thumb-placeholder" style="width:100%;height:100%;background:#eee;"></div>'}
+        </div>
+        <div class="thumb-img">
+          ${img3 ? `<img src="${getMediaUrl(img3, 400)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">` : '<div class="thumb-placeholder" style="width:100%;height:100%;background:#eee;"></div>'}
+        </div>
+      </div>
+    `;
+  }
+  
+  previewCard.innerHTML = thumbHtml;
+}
+
+function renderThumbGrid() {
+  const grid = document.getElementById('thumb-picker-grid');
+  if (!grid) return;
+  
+  if (thumbPickerState.mode === 'auto') {
+    grid.style.display = 'none';
+    return;
+  }
+  
+  grid.style.display = 'flex';
+  grid.innerHTML = '';
+  
+  const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/maxresdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
+  
+  thumbPickerState.images.forEach(img => {
+    const isSelected = thumbPickerState.selectedImageIds.includes(img.id);
+    const selectedIndex = thumbPickerState.selectedImageIds.indexOf(img.id);
+    
+    const item = document.createElement('div');
+    item.className = `thumb-picker-item ${isSelected ? 'selected' : ''}`;
+    
+    let badgeHtml = '';
+    if (isSelected) {
+      if (thumbPickerState.mode === 'group3') {
+        badgeHtml = `<span class="thumb-picker-badge">${selectedIndex + 1}</span>`;
+      } else {
+        badgeHtml = `<span class="thumb-picker-badge">✓</span>`;
+      }
+    }
+    
+    item.innerHTML = `
+      <img src="${getMediaUrl(img, 400)}" loading="lazy">
+      ${badgeHtml}
+    `;
+    
+    item.addEventListener('click', () => {
+      if (thumbPickerState.mode === 'single') {
+        thumbPickerState.selectedImageIds = [img.id];
+      } else if (thumbPickerState.mode === 'group3') {
+        if (isSelected) {
+          thumbPickerState.selectedImageIds = thumbPickerState.selectedImageIds.filter(id => id !== img.id);
+        } else {
+          if (thumbPickerState.selectedImageIds.length < 3) {
+            thumbPickerState.selectedImageIds.push(img.id);
+          } else {
+            thumbPickerState.selectedImageIds.shift();
+            thumbPickerState.selectedImageIds.push(img.id);
+          }
+        }
+      }
+      renderThumbGrid();
+      renderThumbPreview();
+    });
+    
+    grid.appendChild(item);
+  });
+}
+
+export async function openThumbPicker(projectId, projectData) {
+  thumbPickerState.projectId = projectId;
+  thumbPickerState.mode = projectData.thumbMode || 'auto';
+  thumbPickerState.selectedImageIds = projectData.thumbImages ? [...projectData.thumbImages] : [];
+  
+  const modal = document.getElementById('modal-pick-thumb');
+  if (!modal) return;
+  
+  thumbPickerState.images = await fetchImages(projectId);
+  
+  document.querySelectorAll('.thumb-mode-selector button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === thumbPickerState.mode);
+  });
+  
+  renderThumbGrid();
+  renderThumbPreview();
+  
+  modal.classList.add('active');
+}
+
+function setupThumbPicker() {
+  const modal = document.getElementById('modal-pick-thumb');
+  if (!modal) return;
+  
+  const closeBtns = modal.querySelectorAll('.modal-close-thumb');
+  closeBtns.forEach(btn => btn.addEventListener('click', () => modal.classList.remove('active')));
+  
+  const modeBtns = modal.querySelectorAll('.thumb-mode-selector button');
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      thumbPickerState.mode = mode;
+      
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      if (mode === 'single' && thumbPickerState.selectedImageIds.length > 1) {
+        thumbPickerState.selectedImageIds = [thumbPickerState.selectedImageIds[0]];
+      } else if (mode === 'auto') {
+        thumbPickerState.selectedImageIds = [];
+      }
+      
+      renderThumbGrid();
+      renderThumbPreview();
+    });
+  });
+  
+  const saveBtn = document.getElementById('btn-save-thumb');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const { projectId, mode, selectedImageIds } = thumbPickerState;
+      if (!projectId) return;
+      
+      try {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Đang lưu...';
+        
+        await updateDoc(doc(db, 'projects', projectId), {
+          thumbMode: mode,
+          thumbImages: selectedImageIds
+        });
+        
+        showToast('Đã lưu Thumbnail thành công!', 'success');
+        modal.classList.remove('active');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.get('edit')) {
+          for (const section of DEFAULT_SECTIONS) {
+            await renderProjectListForSection(section.id);
+          }
+        } else {
+            // we are in edit mode, so reload the page
+            window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error saving thumb:', error);
+        showToast('Lỗi khi lưu Thumbnail', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Lưu';
+      }
+    });
+  }
+}
 
 export async function initAdminPage() {
   // Check auth
@@ -1320,6 +1561,7 @@ export async function initAdminPage() {
   setupUpload();
   setupNotifications();
   setupAdminProfile();
+  setupThumbPicker();
   await setupAnalyticsSection();
   
   if (editId) {

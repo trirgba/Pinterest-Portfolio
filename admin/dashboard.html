@@ -241,6 +241,7 @@
         <div style="width: 100%; max-width: 800px;">
           <div style="display: flex; gap: 8px; margin-bottom: 12px;">
             <button id="btn-back-to-list" class="btn-secondary btn-sm">← Quay lại</button>
+            <button id="btn-open-thumb-picker" class="btn-secondary btn-sm" style="display: none;">🖼 Chọn Thumbnail</button>
             <button id="btn-save-order" class="btn-primary btn-sm" style="display: none;">Lưu</button>
           </div>
           <div style="display: flex; gap: 24px; margin-bottom: 16px; width: 100%;">
@@ -309,6 +310,37 @@
           <button type="submit" class="btn-primary">Tạo</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Pick Thumbnail -->
+  <div id="modal-pick-thumb" class="modal-overlay">
+    <div class="modal-content" style="max-width: 600px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="margin: 0;">Chọn Thumbnail</h2>
+        <button class="btn-icon modal-close-thumb">✕</button>
+      </div>
+      <div class="thumb-mode-selector" style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <button class="btn-secondary active" data-mode="auto">Auto (3 ảnh đầu)</button>
+        <button class="btn-secondary" data-mode="group3">Chọn 3 ảnh</button>
+        <button class="btn-secondary" data-mode="single">Ảnh đơn</button>
+      </div>
+      <div id="thumb-selection-help" style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px;">
+        Mặc định hiển thị 3 ảnh đầu tiên theo thứ tự.
+      </div>
+      <div id="thumb-picker-grid" class="thumb-picker-grid" style="display: none;">
+        <!-- Images will be rendered here -->
+      </div>
+      <div id="thumb-preview" class="thumb-preview" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--color-border);">
+        <h3 style="font-size: 14px; margin-bottom: 8px;">Preview:</h3>
+        <div id="thumb-preview-card" class="project-card-admin" style="max-width: 300px; margin: 0 auto; display: block; border: none; padding: 0;">
+          <!-- Preview content -->
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top: 24px;">
+        <button type="button" class="btn-secondary modal-close-thumb">Huỷ</button>
+        <button type="button" id="btn-save-thumb" class="btn-primary">Lưu</button>
+      </div>
     </div>
   </div>
 

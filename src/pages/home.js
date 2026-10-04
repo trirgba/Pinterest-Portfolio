@@ -40,8 +40,7 @@ async function fetchProjectsBySection(sectionId) {
 
       const imagesQuery = query(
         collection(db, 'projects', doc.id, 'images'),
-        orderBy('order', 'asc'),
-        limit(3)
+        orderBy('order', 'asc')
       );
       const imagesSnap = await getDocs(imagesQuery);
       const images = imagesSnap.docs.map((imgDoc) => ({
@@ -56,6 +55,8 @@ async function fetchProjectsBySection(sectionId) {
         order: data.order,
         excerpt: data.excerpt || '',
         imageCount: data.imageCount || images.length,
+        thumbMode: data.thumbMode || 'auto',
+        thumbImages: data.thumbImages || [],
         images,
       });
     }
@@ -72,40 +73,41 @@ async function fetchProjectsBySection(sectionId) {
   const snapshot = await getDocs(projectsQuery);
   const projects = [];
 
-  for (const doc of snapshot.docs) {
-    const data = doc.data();
-    let imagesQuery;
-    if (sectionId === '4') {
-      imagesQuery = query(
-        collection(db, 'projects', doc.id, 'images'),
-        orderBy('order', 'asc')
-      );
-    } else {
-      imagesQuery = query(
-        collection(db, 'projects', doc.id, 'images'),
-        orderBy('order', 'asc'),
-        limit(3)
-      );
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      let imagesQuery;
+      if (sectionId === '4') {
+        imagesQuery = query(
+          collection(db, 'projects', doc.id, 'images'),
+          orderBy('order', 'asc')
+        );
+      } else {
+        imagesQuery = query(
+          collection(db, 'projects', doc.id, 'images'),
+          orderBy('order', 'asc')
+        );
+      }
+      const imagesSnap = await getDocs(imagesQuery);
+      const images = imagesSnap.docs.map((imgDoc) => ({
+        id: imgDoc.id,
+        ...imgDoc.data(),
+      }));
+
+      projects.push({
+        id: doc.id,
+        name: data.name,
+        slug: data.slug,
+        order: data.order,
+        excerpt: data.excerpt || '',
+        imageCount: data.imageCount || images.length,
+        thumbMode: data.thumbMode || 'auto',
+        thumbImages: data.thumbImages || [],
+        images,
+      });
     }
-    const imagesSnap = await getDocs(imagesQuery);
-    const images = imagesSnap.docs.map((imgDoc) => ({
-      id: imgDoc.id,
-      ...imgDoc.data(),
-    }));
 
-    projects.push({
-      id: doc.id,
-      name: data.name,
-      slug: data.slug,
-      order: data.order,
-      excerpt: data.excerpt || '',
-      imageCount: data.imageCount || images.length,
-      images,
-    });
+    return projects;
   }
-
-  return projects;
-}
 
 /**
  * Render một project card với thumbnail 3:2
@@ -117,32 +119,58 @@ function renderProjectCard(project) {
   card.className = 'project-card animate-fade-in';
   card.style.animationDelay = `${project.order * 60}ms`;
 
-  const [img1, img2, img3] = project.images;
+  const thumbMode = project.thumbMode || 'auto';
+  const thumbImages = project.thumbImages || [];
+  
+  let finalImages = [];
+  if (thumbMode === 'auto') {
+    finalImages = project.images.slice(0, 3);
+  } else if (thumbMode === 'group3') {
+    finalImages = thumbImages.map(id => project.images.find(img => img.id === id)).filter(Boolean);
+    while (finalImages.length < 3) finalImages.push(null);
+  } else if (thumbMode === 'single') {
+    const singleImg = project.images.find(img => img.id === thumbImages[0]);
+    if (singleImg) finalImages = [singleImg];
+  }
 
   const getSeoAlt = (index) => `${project.name} - ${SITE_CONFIG.title} - Ảnh ${index}`;
   const getMediaUrl = (media, width) => media.type === 'youtube' ? `https://img.youtube.com/vi/${media.youtubeId}/maxresdefault.jpg` : getOptimizedUrl(media.cloudinaryId, { width });
 
+  let thumbHtml = '';
+  if (thumbMode === 'single' && finalImages[0]) {
+    thumbHtml = `
+      <div class="project-thumb thumb-single">
+        <img src="${getMediaUrl(finalImages[0], 800)}" alt="${getSeoAlt(1)}" title="${getSeoAlt(1)}" loading="lazy">
+      </div>
+    `;
+  } else {
+    const [img1, img2, img3] = finalImages;
+    thumbHtml = `
+      <div class="project-thumb">
+        <div class="thumb-img-large">
+          ${img1
+            ? `<img src="${getMediaUrl(img1, 800)}" alt="${getSeoAlt(1)}" title="${getSeoAlt(1)}" loading="lazy">`
+            : '<div class="thumb-placeholder"></div>'
+          }
+        </div>
+        <div class="thumb-img">
+          ${img2
+            ? `<img src="${getMediaUrl(img2, 400)}" alt="${getSeoAlt(2)}" title="${getSeoAlt(2)}" loading="lazy">`
+            : '<div class="thumb-placeholder"></div>'
+          }
+        </div>
+        <div class="thumb-img">
+          ${img3
+            ? `<img src="${getMediaUrl(img3, 400)}" alt="${getSeoAlt(3)}" title="${getSeoAlt(3)}" loading="lazy">`
+            : '<div class="thumb-placeholder"></div>'
+          }
+        </div>
+      </div>
+    `;
+  }
+
   card.innerHTML = `
-    <div class="project-thumb">
-      <div class="thumb-img-large">
-        ${img1
-          ? `<img src="${getMediaUrl(img1, 800)}" alt="${getSeoAlt(1)}" title="${getSeoAlt(1)}" loading="lazy">`
-          : '<div class="thumb-placeholder"></div>'
-        }
-      </div>
-      <div class="thumb-img">
-        ${img2
-          ? `<img src="${getMediaUrl(img2, 400)}" alt="${getSeoAlt(2)}" title="${getSeoAlt(2)}" loading="lazy">`
-          : '<div class="thumb-placeholder"></div>'
-        }
-      </div>
-      <div class="thumb-img">
-        ${img3
-          ? `<img src="${getMediaUrl(img3, 400)}" alt="${getSeoAlt(3)}" title="${getSeoAlt(3)}" loading="lazy">`
-          : '<div class="thumb-placeholder"></div>'
-        }
-      </div>
-    </div>
+    ${thumbHtml}
     <div class="project-info">
       <h3 class="project-name">${project.name}</h3>
       ${project.excerpt ? `<p class="project-excerpt">${project.excerpt}</p>` : ''}
