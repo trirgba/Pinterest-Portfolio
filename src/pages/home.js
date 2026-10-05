@@ -57,6 +57,7 @@ async function fetchProjectsBySection(sectionId) {
         imageCount: data.imageCount || images.length,
         thumbMode: data.thumbMode || 'auto',
         thumbImages: data.thumbImages || [],
+        thumbTransform: data.thumbTransform || { scale: 1, x: 50, y: 50 },
         images,
       });
     }
@@ -102,6 +103,7 @@ async function fetchProjectsBySection(sectionId) {
         imageCount: data.imageCount || images.length,
         thumbMode: data.thumbMode || 'auto',
         thumbImages: data.thumbImages || [],
+        thumbTransform: data.thumbTransform || { scale: 1, x: 50, y: 50 },
         images,
       });
     }
@@ -138,9 +140,10 @@ function renderProjectCard(project) {
 
   let thumbHtml = '';
   if (thumbMode === 'single' && finalImages[0]) {
+    const t = project.thumbTransform || { scale: 1, x: 50, y: 50 };
     thumbHtml = `
-      <div class="project-thumb thumb-single">
-        <img src="${getMediaUrl(finalImages[0], 800)}" alt="${getSeoAlt(1)}" title="${getSeoAlt(1)}" loading="lazy">
+      <div class="project-thumb thumb-single" style="overflow: hidden;">
+        <img src="${getMediaUrl(finalImages[0], 800)}" alt="${getSeoAlt(1)}" title="${getSeoAlt(1)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; object-position: ${t.x}% ${t.y}%; transform: scale(${t.scale}); transform-origin: center;">
       </div>
     `;
   } else {

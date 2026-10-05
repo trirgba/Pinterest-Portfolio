@@ -342,9 +342,10 @@ async function renderProjectListForSection(sectionId) {
       }
 
       if (thumbMode === 'single' && finalImages[0]) {
+        const t = project.thumbTransform || { scale: 1, x: 50, y: 50 };
         thumbHtml = `
-          <div class="project-thumb thumb-single">
-            <img src="${getMediaUrl(finalImages[0], 800)}" loading="lazy">
+          <div class="project-thumb thumb-single" style="overflow: hidden;">
+            <img src="${getMediaUrl(finalImages[0], 800)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; object-position: ${t.x}% ${t.y}%; transform: scale(${t.scale}); transform-origin: center;">
           </div>
         `;
       } else {
@@ -1244,6 +1245,7 @@ let thumbPickerState = {
   mode: 'auto', // auto, group3, single
   images: [], // all project images
   selectedImageIds: [], // group3 (max 3), single (max 1)
+  thumbTransform: { scale: 1, x: 50, y: 50 } // x and y are percentages for object-position (50 = center)
 };
 
 function renderThumbPreview() {
@@ -1265,9 +1267,14 @@ function renderThumbPreview() {
 
   let thumbHtml = '';
   if (thumbPickerState.mode === 'single' && finalImages[0]) {
+    const t = thumbPickerState.thumbTransform;
     thumbHtml = `
-      <div class="project-thumb thumb-single" style="border: 1px solid var(--color-border); border-radius: var(--radius-card); overflow: hidden;">
-        <img src="${getMediaUrl(finalImages[0], 800)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+      <div class="project-thumb thumb-single" style="border: 1px solid var(--color-border); border-radius: var(--radius-card); overflow: hidden; position: relative; cursor: grab;">
+        <img id="thumb-single-preview-img" src="${getMediaUrl(finalImages[0], 800)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; object-position: ${t.x}% ${t.y}%; transform: scale(${t.scale}); transform-origin: center; transition: none;">
+        <div style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; pointer-events: none; white-space: nowrap;">
+          Cuộn chuột để Zoom, Kéo để Di chuyển
+        </div>
+        <button type="button" id="btn-reset-thumb-transform" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: ${t.scale !== 1 || t.x !== 50 || t.y !== 50 ? 'block' : 'none'};">Reset</button>
       </div>
     `;
   } else {
@@ -1288,6 +1295,83 @@ function renderThumbPreview() {
   }
   
   previewCard.innerHTML = thumbHtml;
+
+  // Add event listeners for single mode interactive crop
+  if (thumbPickerState.mode === 'single' && finalImages[0]) {
+    const imgWrapper = previewCard.querySelector('.thumb-single');
+    const imgEl = document.getElementById('thumb-single-preview-img');
+    const resetBtn = document.getElementById('btn-reset-thumb-transform');
+    
+    let isDragging = false;
+    let startX, startY;
+    let startObjX, startObjY;
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        thumbPickerState.thumbTransform = { scale: 1, x: 50, y: 50 };
+        renderThumbPreview();
+      });
+    }
+
+    imgWrapper.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startObjX = thumbPickerState.thumbTransform.x;
+      startObjY = thumbPickerState.thumbTransform.y;
+      imgWrapper.style.cursor = 'grabbing';
+      e.preventDefault(); // prevent native image dragging
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      
+      // Calculate movement as percentage (inverse because moving mouse right means object-position should shift left visually)
+      // Actually, if object-position is 0%, image left aligns to container left.
+      // If object-position increases to 100%, image shifts left visually (container looks at the right).
+      // So if you drag mouse right (dx > 0), you want the image to move right visually, so object-position must decrease.
+      
+      const speed = 0.2 / thumbPickerState.thumbTransform.scale; // adjust sensitivity based on scale
+      
+      let newX = startObjX - (dx * speed);
+      let newY = startObjY - (dy * speed);
+      
+      // Clamp loosely or let it free. Better to clamp between 0 and 100 so it doesn't detach.
+      // However, if zoomed in heavily, object-position can be outside 0-100 without issue. But let's limit it roughly.
+      newX = Math.max(-50, Math.min(150, newX));
+      newY = Math.max(-50, Math.min(150, newY));
+
+      thumbPickerState.thumbTransform.x = newX;
+      thumbPickerState.thumbTransform.y = newY;
+      
+      imgEl.style.objectPosition = `${newX}% ${newY}%`;
+      if (resetBtn) resetBtn.style.display = 'block';
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        imgWrapper.style.cursor = 'grab';
+      }
+    });
+
+    // Zoom on wheel
+    imgWrapper.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomSpeed = 0.05;
+      if (e.deltaY < 0) {
+        thumbPickerState.thumbTransform.scale = Math.min(5, thumbPickerState.thumbTransform.scale + zoomSpeed);
+      } else {
+        thumbPickerState.thumbTransform.scale = Math.max(1, thumbPickerState.thumbTransform.scale - zoomSpeed);
+      }
+      imgEl.style.transform = `scale(${thumbPickerState.thumbTransform.scale})`;
+      if (resetBtn) resetBtn.style.display = 'block';
+    });
+  }
 }
 
 function renderThumbGrid() {
@@ -1327,7 +1411,10 @@ function renderThumbGrid() {
     
     item.addEventListener('click', () => {
       if (thumbPickerState.mode === 'single') {
-        thumbPickerState.selectedImageIds = [img.id];
+        if (!thumbPickerState.selectedImageIds.includes(img.id)) {
+          thumbPickerState.selectedImageIds = [img.id];
+          thumbPickerState.thumbTransform = { scale: 1, x: 50, y: 50 }; // reset on new select
+        }
       } else if (thumbPickerState.mode === 'group3') {
         if (isSelected) {
           thumbPickerState.selectedImageIds = thumbPickerState.selectedImageIds.filter(id => id !== img.id);
@@ -1352,6 +1439,7 @@ export async function openThumbPicker(projectId, projectData) {
   thumbPickerState.projectId = projectId;
   thumbPickerState.mode = projectData.thumbMode || 'auto';
   thumbPickerState.selectedImageIds = projectData.thumbImages ? [...projectData.thumbImages] : [];
+  thumbPickerState.thumbTransform = projectData.thumbTransform || { scale: 1, x: 50, y: 50 };
   
   const modal = document.getElementById('modal-pick-thumb');
   if (!modal) return;
@@ -1398,7 +1486,7 @@ function setupThumbPicker() {
   const saveBtn = document.getElementById('btn-save-thumb');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
-      const { projectId, mode, selectedImageIds } = thumbPickerState;
+      const { projectId, mode, selectedImageIds, thumbTransform } = thumbPickerState;
       if (!projectId) return;
       
       try {
@@ -1407,7 +1495,9 @@ function setupThumbPicker() {
         
         await updateDoc(doc(db, 'projects', projectId), {
           thumbMode: mode,
-          thumbImages: selectedImageIds
+          thumbImages: selectedImageIds,
+          thumbTransform: thumbTransform
+
         });
         
         showToast('Đã lưu Thumbnail thành công!', 'success');
