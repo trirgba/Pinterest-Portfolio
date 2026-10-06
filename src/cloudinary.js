@@ -103,8 +103,7 @@ export async function deleteFromCloudinary(publicId, idToken) {
 export function getOptimizedUrl(publicId, options = {}) {
   // Ép mặc định sang webp và chất lượng tự động tối ưu
   const { width, quality = 'auto', format = 'webp' } = options;
-  // fl_keep_iptc: giữ lại EXIF/IPTC metadata (tên tác giả, copyright) sau khi transform
-  const transforms = [`f_${format}`, `q_${quality}`, 'fl_keep_iptc'];
+  const transforms = [`f_${format}`, `q_${quality}`];
   if (width) transforms.push(`w_${width}`);
   // Encode từng phần của publicId để xử lý ký tự đặc biệt (dấu tiếng Việt, khoảng trắng...)
   // nhưng giữ nguyên '/' cho cấu trúc folder
