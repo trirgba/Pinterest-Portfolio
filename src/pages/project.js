@@ -15,7 +15,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { getOptimizedUrl } from '../cloudinary.js';
-import { SITE_CONFIG } from '../config/seo.js';
+import { SITE_CONFIG, injectProjectSEO } from '../config/seo.js';
 import { getCurrentUser } from '../auth.js';
 
 
@@ -432,6 +432,22 @@ export async function initProjectPage() {
 
     if (titleEl) titleEl.textContent = project.name;
     if (countEl) countEl.textContent = `/ ${project.images.length} ảnh`;
+
+    // ─── Inject SEO động theo project ─────────────────────────────────────
+    // Ưu tiên 1: Ảnh OG do admin upload riêng
+    // Ưu tiên 2: Ảnh đầu tiên của project (không phải YouTube)
+    let ogImageUrl = null;
+    
+    if (project.ogImageCloudinaryId) {
+      ogImageUrl = `https://res.cloudinary.com/dft21ara1/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${project.ogImageCloudinaryId}`;
+    } else {
+      const firstImg = project.images.find(img => img.type !== 'youtube');
+      if (firstImg) {
+        ogImageUrl = `https://res.cloudinary.com/dft21ara1/image/upload/f_auto,q_auto,w_1200,h_630,c_fill,g_auto/${firstImg.cloudinaryId}`;
+      }
+    }
+    
+    injectProjectSEO(project, ogImageUrl);
 
     // Check admin and show edit button
     const user = await getCurrentUser();

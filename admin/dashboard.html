@@ -242,7 +242,18 @@
           <div style="display: flex; gap: 8px; margin-bottom: 12px;">
             <button id="btn-back-to-list" class="btn-secondary btn-sm">← Quay lại</button>
             <button id="btn-open-thumb-picker" class="btn-secondary btn-sm" style="display: none;">🖼 Chọn Thumbnail</button>
+            <button id="btn-upload-og-image" class="btn-secondary btn-sm" style="display: none;">🔗 Cài đặt ảnh share Facebook (OG)</button>
             <button id="btn-save-order" class="btn-primary btn-sm" style="display: none;">Lưu</button>
+          </div>
+          <div id="og-image-preview" style="display: none; margin-bottom: 16px; align-items: center; gap: 12px; background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid var(--color-border);">
+            <div style="width: 120px; height: 63px; border-radius: 4px; overflow: hidden; background: #e5e7eb; flex-shrink: 0;">
+              <img id="og-image-img" src="" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 13px; font-weight: 600;">Ảnh chia sẻ (Open Graph) hiện tại</div>
+              <div style="font-size: 12px; color: var(--color-text-muted);">Sẽ hiển thị khi share link dự án này lên Facebook, LinkedIn, Zalo... Tỉ lệ lý tưởng 1200x630.</div>
+            </div>
+            <button id="btn-remove-og-image" class="btn-icon danger" title="Xóa ảnh OG"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button>
           </div>
           <div style="display: flex; gap: 24px; margin-bottom: 16px; width: 100%;">
             <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
@@ -382,6 +393,48 @@
         <div id="admin-login-history" class="history-list">
           <!-- list -->
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: OG Image Cropper -->
+  <div id="modal-og-cropper" class="modal-overlay">
+    <div class="modal-content" style="max-width: 800px; width: 90%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="margin: 0;">Cài đặt ảnh Open Graph (Share Facebook)</h2>
+        <button class="btn-icon" id="btn-close-og-modal-top">✕</button>
+      </div>
+      
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <button class="btn-primary" id="btn-og-choose-project">Chọn từ thư viện ảnh Project</button>
+        <button class="btn-secondary" id="btn-og-choose-file">Tải file từ máy lên</button>
+        <input type="file" id="input-og-file-hidden" accept="image/*" style="display: none;">
+      </div>
+      
+      <!-- Gallery Grid -->
+      <div id="og-gallery-grid" class="thumb-picker-grid" style="display: none; margin-bottom: 16px; max-height: 250px; overflow-y: auto; border: 1px solid var(--color-border); padding: 8px; border-radius: 8px;">
+         <!-- project images populated here -->
+      </div>
+
+      <!-- Crop Area -->
+      <div id="og-crop-area" style="display: none; flex-direction: column; align-items: center;">
+        <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+          Cuộn chuột để Zoom, Kéo thả để Di chuyển (Tỉ lệ chuẩn 1200x630)
+        </p>
+        
+        <div id="og-crop-container" style="width: 100%; max-width: 600px; aspect-ratio: 1200/630; border: 2px dashed var(--color-primary); border-radius: 4px; overflow: hidden; position: relative; cursor: grab; background: #e5e7eb;">
+          <img id="og-crop-img" crossorigin="anonymous" src="" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; transform: scale(1); transform-origin: center; transition: none; pointer-events: none;">
+        </div>
+        
+        <div style="margin-top: 12px;">
+           <button class="btn-secondary btn-sm" id="btn-og-reset">Khôi phục mặc định (Reset)</button>
+        </div>
+      </div>
+      
+      <div class="modal-actions" style="margin-top: 24px;">
+        <button type="button" class="btn-secondary" id="btn-close-og-modal">Huỷ</button>
+        <button type="button" class="btn-primary" id="btn-save-og-crop" style="display: none;">📸 Cắt & Lưu OG</button>
       </div>
     </div>
   </div>

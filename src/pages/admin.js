@@ -442,6 +442,51 @@ async function renderProjectDetail(projectId) {
     });
   }
 
+  // Nút mở Modal OG
+  const btnUploadOg = document.getElementById('btn-upload-og-image');
+  const ogPreviewArea = document.getElementById('og-image-preview');
+  const ogPreviewImg = document.getElementById('og-image-img');
+  const btnRemoveOg = document.getElementById('btn-remove-og-image');
+
+  if (btnUploadOg) {
+    btnUploadOg.style.display = 'block';
+    const newBtnOg = btnUploadOg.cloneNode(true);
+    btnUploadOg.parentNode.replaceChild(newBtnOg, btnUploadOg);
+    
+    newBtnOg.addEventListener('click', () => {
+      openOGModal(projectId, currentImages);
+    });
+  }
+
+  // Xử lý nút xoá OG image
+  if (btnRemoveOg) {
+    const newRemoveBtn = btnRemoveOg.cloneNode(true);
+    btnRemoveOg.parentNode.replaceChild(newRemoveBtn, btnRemoveOg);
+    newRemoveBtn.addEventListener('click', async () => {
+      if (!confirm('Bạn muốn xoá ảnh Open Graph riêng và dùng lại ảnh mặc định?')) return;
+      try {
+        await updateDoc(doc(db, 'projects', projectId), {
+          ogImageCloudinaryId: null
+        });
+        showToast('Đã xoá ảnh OG, sử dụng ảnh mặc định.', 'success');
+        ogPreviewArea.style.display = 'none';
+        
+        // Reload preview
+        project.ogImageCloudinaryId = null;
+      } catch (err) {
+        showToast('Lỗi xoá ảnh', 'error');
+      }
+    });
+  }
+
+  // Hiển thị preview nếu project đã có ảnh OG
+  if (project.ogImageCloudinaryId) {
+    ogPreviewArea.style.display = 'flex';
+    ogPreviewImg.src = getOptimizedUrl(project.ogImageCloudinaryId, { width: 300 });
+  } else {
+    ogPreviewArea.style.display = 'none';
+  }
+
   const nameInput = document.getElementById('detail-project-name');
   nameInput.value = project.name;
 
@@ -1523,6 +1568,234 @@ function setupThumbPicker() {
   }
 }
 
+// ==========================================
+// OG CROPPER
+// ==========================================
+
+let ogCropState = {
+  projectId: null,
+  imgSrc: null,
+  transform: { scale: 1, x: 50, y: 50 }
+};
+
+export function openOGModal(projectId, images) {
+  ogCropState.projectId = projectId;
+  ogCropState.imgSrc = null;
+  ogCropState.transform = { scale: 1, x: 50, y: 50 };
+  
+  const modal = document.getElementById('modal-og-cropper');
+  if (!modal) return;
+  
+  const grid = document.getElementById('og-gallery-grid');
+  const cropArea = document.getElementById('og-crop-area');
+  const btnSave = document.getElementById('btn-save-og-crop');
+  
+  grid.style.display = 'none';
+  cropArea.style.display = 'none';
+  btnSave.style.display = 'none';
+  
+  // Render gallery
+  grid.innerHTML = '';
+  images.forEach(img => {
+    if (img.type === 'youtube') return;
+    const thumbUrl = getOptimizedUrl(img.cloudinaryId, { width: 400 });
+    const fullUrl = getOptimizedUrl(img.cloudinaryId, { width: 2000 }); // load full for crop
+    
+    const item = document.createElement('div');
+    item.className = 'thumb-picker-item';
+    item.innerHTML = `<img src="${thumbUrl}" loading="lazy">`;
+    item.onclick = () => {
+      ogCropState.imgSrc = fullUrl;
+      showOGCropArea();
+    };
+    grid.appendChild(item);
+  });
+  
+  modal.classList.add('active');
+}
+
+function showOGCropArea() {
+  const cropArea = document.getElementById('og-crop-area');
+  const btnSave = document.getElementById('btn-save-og-crop');
+  const imgEl = document.getElementById('og-crop-img');
+  
+  ogCropState.transform = { scale: 1, x: 50, y: 50 };
+  
+  imgEl.src = ogCropState.imgSrc;
+  updateOGCropTransform();
+  
+  cropArea.style.display = 'flex';
+  btnSave.style.display = 'block';
+}
+
+function updateOGCropTransform() {
+  const imgEl = document.getElementById('og-crop-img');
+  imgEl.style.transform = `scale(${ogCropState.transform.scale})`;
+  imgEl.style.objectPosition = `${ogCropState.transform.x}% ${ogCropState.transform.y}%`;
+}
+
+function setupOGCropper() {
+  const modal = document.getElementById('modal-og-cropper');
+  if (!modal) return;
+  
+  const btnCloseTop = document.getElementById('btn-close-og-modal-top');
+  const btnClose = document.getElementById('btn-close-og-modal');
+  const btnChooseProject = document.getElementById('btn-og-choose-project');
+  const btnChooseFile = document.getElementById('btn-og-choose-file');
+  const fileInput = document.getElementById('input-og-file-hidden');
+  const grid = document.getElementById('og-gallery-grid');
+  const container = document.getElementById('og-crop-container');
+  const btnReset = document.getElementById('btn-og-reset');
+  const btnSave = document.getElementById('btn-save-og-crop');
+  
+  const closeModal = () => modal.classList.remove('active');
+  btnCloseTop.addEventListener('click', closeModal);
+  btnClose.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  
+  btnChooseProject.addEventListener('click', () => {
+    grid.style.display = grid.style.display === 'none' ? 'flex' : 'none';
+  });
+  
+  btnChooseFile.addEventListener('click', () => fileInput.click());
+  
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Create local blob URL cho upload từ máy
+    const url = URL.createObjectURL(file);
+    ogCropState.imgSrc = url;
+    showOGCropArea();
+    fileInput.value = '';
+    grid.style.display = 'none';
+  });
+  
+  btnReset.addEventListener('click', () => {
+    ogCropState.transform = { scale: 1, x: 50, y: 50 };
+    updateOGCropTransform();
+  });
+  
+  // DRAG & ZOOM LOGIC
+  let isDragging = false;
+  let startX, startY;
+  let startObjX, startObjY;
+  
+  container.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startObjX = ogCropState.transform.x;
+    startObjY = ogCropState.transform.y;
+    container.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    
+    const speed = 0.2 / ogCropState.transform.scale;
+    let newX = startObjX - (dx * speed);
+    let newY = startObjY - (dy * speed);
+    
+    newX = Math.max(-50, Math.min(150, newX));
+    newY = Math.max(-50, Math.min(150, newY));
+    
+    ogCropState.transform.x = newX;
+    ogCropState.transform.y = newY;
+    updateOGCropTransform();
+  });
+  
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      container.style.cursor = 'grab';
+    }
+  });
+  
+  container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomSpeed = 0.05;
+    if (e.deltaY < 0) {
+      ogCropState.transform.scale = Math.min(5, ogCropState.transform.scale + zoomSpeed);
+    } else {
+      ogCropState.transform.scale = Math.max(1, ogCropState.transform.scale - zoomSpeed);
+    }
+    updateOGCropTransform();
+  });
+  
+  // RENDER CANVAS VÀ UPLOAD
+  btnSave.addEventListener('click', async () => {
+    try {
+      btnSave.disabled = true;
+      btnSave.textContent = 'Đang xử lý & Tải lên...';
+      
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = ogCropState.imgSrc;
+      });
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200;
+      canvas.height = 630;
+      const ctx = canvas.getContext('2d');
+      
+      const W_c = 1200;
+      const H_c = 630;
+      const W_i = img.naturalWidth;
+      const H_i = img.naturalHeight;
+      
+      const S_base = Math.max(W_c / W_i, H_c / H_i);
+      const W_prime = W_i * S_base;
+      const H_prime = H_i * S_base;
+      
+      const S = ogCropState.transform.scale;
+      const W_double_prime = W_prime * S;
+      const H_double_prime = H_prime * S;
+      
+      const dx = (W_c - W_double_prime) * (ogCropState.transform.x / 100);
+      const dy = (H_c - H_double_prime) * (ogCropState.transform.y / 100);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W_c, H_c);
+      ctx.drawImage(img, dx, dy, W_double_prime, H_double_prime);
+      
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+      const file = new File([blob], 'og-image-cropped.jpg', { type: 'image/jpeg' });
+      
+      const result = await uploadToCloudinary(file);
+      
+      await updateDoc(doc(db, 'projects', ogCropState.projectId), {
+        ogImageCloudinaryId: result.cloudinaryId
+      });
+      
+      showToast('Đã lưu ảnh Open Graph thành công!', 'success');
+      closeModal();
+      
+      // Update UI preview in admin
+      const ogPreviewArea = document.getElementById('og-image-preview');
+      const ogPreviewImg = document.getElementById('og-image-img');
+      if (ogPreviewArea && ogPreviewImg) {
+        ogPreviewArea.style.display = 'flex';
+        ogPreviewImg.src = getOptimizedUrl(result.cloudinaryId, { width: 300 });
+      }
+      
+    } catch (err) {
+      console.error('Lỗi khi cắt và tải ảnh:', err);
+      showToast('Lỗi khi tải ảnh. Thử lại sau.', 'error');
+    } finally {
+      btnSave.disabled = false;
+      btnSave.textContent = '📸 Cắt & Lưu OG';
+    }
+  });
+}
+
 export async function initAdminPage() {
   // Check auth
   onAuthChange((user) => {
@@ -1652,6 +1925,7 @@ export async function initAdminPage() {
   setupNotifications();
   setupAdminProfile();
   setupThumbPicker();
+  setupOGCropper();
   await setupAnalyticsSection();
   
   if (editId) {

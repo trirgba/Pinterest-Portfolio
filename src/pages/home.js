@@ -12,7 +12,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { getOptimizedUrl } from '../cloudinary.js';
-import { SITE_CONFIG } from '../config/seo.js';
+import { SITE_CONFIG, injectSEO } from '../config/seo.js';
 import { getCurrentUser } from '../auth.js';
 import { DEFAULT_SECTIONS, fetchSectionNames } from '../config/sections.js';
 
@@ -348,6 +348,8 @@ function renderShortsSection(projects, container) {
  * Initialize trang chủ — multi-section
  */
 export async function initHomePage() {
+  // Inject SEO (title, meta, OG, JSON-LD, GA) ngay khi trang load
+  injectSEO();
   // Cập nhật trạng thái nút Login nếu đã đăng nhập
   const loginBtn = document.querySelector('.login-btn');
   getCurrentUser().then(user => {
