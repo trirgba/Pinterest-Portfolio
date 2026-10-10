@@ -12,9 +12,11 @@ Last commit: pending
 - Đã có tính năng chọn Thumbnail tùy chỉnh (Auto, Group 3 ảnh, Ảnh đơn) cho các Section hiển thị dạng dự án hình ảnh.
 
 ## 3. Thay đổi gần nhất
-- **06/10/2026**: Thêm tính năng "OG Image Cropper" trong Admin Dashboard. Cho phép tuỳ chỉnh ảnh share Facebook bằng cách chọn từ thư viện dự án hoặc tải lên file mới. Hỗ trợ giao diện kéo/thả/zoom để cắt ảnh đúng tỉ lệ 1200x630. Hệ thống tự động dùng thuật toán `<canvas>` render ảnh client-side rồi upload lên Cloudinary.
-- **06/10/2026**: Nâng cấp SEO toàn diện. Sửa `seo.js` — thêm `injectProjectSEO()`, `upsertMeta()` tránh duplicate, Open Graph, Twitter Card, JSON-LD `ImageGallery`, canonical URL. Cập nhật `SITE_CONFIG.role = 'Multimedia Designer'`. Gọi `injectSEO()` trong `home.js`, `injectProjectSEO()` trong `project.js` (dùng ảnh đầu tiên làm OG image mặc định nếu admin không set). Cập nhật `index.html` + `project.html` với placeholder meta tags. Thêm `fl_keep_iptc` vào `cloudinary.js`.
-- **06/10/2026**: Tạo `tools/batch-convert.js` — CLI tool dùng `sharp` để batch convert hàng loạt ảnh sang WebP.
+- **10/10/2026**: Tạo trang `/tools/` với công cụ "Image → WebP Converter" chạy 100% client-side (Canvas API). Kéo thả ảnh, tuỳ chỉnh chất lượng + kích thước, tải về từng file hoặc ZIP. SEO đầy đủ (JSON-LD `WebApplication`, OG, Twitter Card) để đẩy lên Google. Cấu trúc trang hỗ trợ mở rộng thêm tool mới qua tabs.
+- **10/10/2026**: Tạo Global Footer component (`src/components/footer.js`). Áp dụng đồng nhất trên tất cả các trang (index, project, dashboard, tools). Có link đến trang Công cụ.
+- **06/10/2026**: Thêm tính năng "OG Image Cropper" trong Admin Dashboard.
+- **06/10/2026**: Nâng cấp SEO toàn diện (seo.js, Open Graph, Twitter Card, JSON-LD).
+- **06/10/2026**: Tạo `tools/batch-convert.js` — CLI tool batch convert ảnh sang WebP.
 - **04/10/2026**: Thêm tính năng cấu hình Thumbnail cho dự án ảnh trên trang chủ. Hỗ trợ 3 chế độ: "Auto", "Group 3", và "Single".
 - **04/10/2026**: Tích hợp Lightbox với độ phân giải màn hình thực tế, fix lỗi ảnh ngang siêu rộng.
 - **01/10/2026**: Thiết kế lại Widget hiển thị dung lượng Cloudinary trên Dashboard, tách bạch rõ ràng phần "Tổng Credits tiêu thụ" (Progress bar), "Dung lượng Storage đang lưu" (GB) và "Băng thông Bandwidth đã dùng trong 30 ngày qua" (GB) để User dễ theo dõi.
@@ -24,7 +26,8 @@ Last commit: pending
 - **01/10/2026**: Thêm widget tiến độ dung lượng (Progress Bar) vào `admin/dashboard.html` và fetch/render data trong `src/pages/admin.js`.
 
 ## 4. Hướng dẫn cho AI/máy tiếp theo
-- **Tool convert**: `npm run convert ~/Desktop/<folder>` — tạo WebP + EXIF metadata. File config tác giả ở đầu `tools/batch-convert.js`.
-- **SEO**: `src/config/seo.js` là nơi duy nhất quản lý thông tin. Sửa `SITE_CONFIG` nếu cần đổi URL/tên. `injectSEO()` cho trang chủ, `injectProjectSEO(project, ogImageUrl)` cho trang project.
-- Nếu cần chạy local với API Vercel, hãy đảm bảo biến môi trưẝng `CLOUDINARY_API_SECRET` được thiết lập trên Vercel.
-- Tiếp theo có thể làm: sitemap.xml động, OG image design riêng (1200×630) cho branding.
+- **Trang Tools** (`/tools/`): entry tại `tools/index.html`, logic `src/pages/tools.js`, CSS `src/styles/tools.css`. Thêm tool mới bằng cách thêm tab và section mới.
+- **Global Footer**: `src/components/footer.js` — gọi `renderGlobalFooter()` trong mọi trang. Chỉ sửa 1 file để cập nhật footer toàn bộ.
+- **SEO**: `src/config/seo.js` quản lý SEO tập trung. Trang tools có JSON-LD `WebApplication` riêng.
+- Nếu cần chạy local với API Vercel, đảm bảo biến môi trường `CLOUDINARY_API_SECRET` trên Vercel.
+- Tiếp theo: thêm công cụ mới (Image Resizer, Color Palette Extractor...), sitemap.xml động.

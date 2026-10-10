@@ -441,10 +441,15 @@
 
   </div>
 
+  <!-- Footer Global -->
+  <footer id="global-footer"></footer>
+
   <script type="module">
     import '../src/styles/main.css';
     import '../src/styles/admin.css';
     import { initAdminPage } from '../src/pages/admin.js?v=2';
+    import { renderGlobalFooter } from '../src/components/footer.js';
+    renderGlobalFooter();
     initAdminPage();
   </script>
 </body>

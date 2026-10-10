@@ -1,0 +1,145 @@
+/* ===========================
+   TOOLS PAGE STYLES
+   =========================== */
+
+/* Tool Tabs */
+.tool-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.tool-tab:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.tool-tab.active {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+/* Drop Zone */
+.tool-drop-zone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  padding: 40px 24px;
+  border: 2px dashed var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-align: center;
+}
+
+.tool-drop-zone:hover {
+  border-color: var(--color-accent);
+  background: #fafafa;
+}
+
+.tool-drop-zone.dragover {
+  border-color: var(--color-accent);
+  background: #f0f9ff;
+  border-style: solid;
+  transform: scale(1.01);
+}
+
+/* File Item */
+.tool-file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  transition: all var(--transition-fast);
+}
+
+.tool-file-item:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.tool-file-item .file-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #f0f0f0;
+  flex-shrink: 0;
+}
+
+.tool-file-item .file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tool-file-item .file-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-file-item .file-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.tool-file-item .file-saved {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.tool-file-item .file-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Progress bar cho từng file */
+.tool-file-item .progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.tool-file-item .progress-bar .fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tool-file-item {
+    flex-wrap: wrap;
+  }
+  .tool-file-item .file-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+}

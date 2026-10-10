@@ -13,6 +13,7 @@ export default defineConfig({
         adminLogin: 'admin/index.html',
         adminDashboard: 'admin/dashboard.html',
         ad: 'ad/index.html',
+        tools: 'tools/index.html',
       },
     },
   },
