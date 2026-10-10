@@ -10,14 +10,13 @@ export function renderGlobalFooter() {
   
   footerEl.innerHTML = `
     <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-      <p style="color: var(--color-text-muted); font-size: 14px; margin: 0;">
-        © ${new Date().getFullYear()} trixinchao . All rights reserved.
-      </p>
-      <div style="display: flex; align-items: center; gap: 12px; font-size: 14px;">
-        <a href="/tools/" style="color: var(--color-text-muted); transition: color 0.2s; font-size: 13px; text-decoration: none;" title="Công cụ chuyển đổi ảnh WebP miễn phí">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 2px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-          Công cụ
-        </a>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <p style="color: var(--color-text-muted); font-size: 14px; margin: 0;">
+          © ${new Date().getFullYear()} trixinchao . All rights reserved.
+        </p>
+        <a href="/tools/" class="footer-tools-link" style="color: var(--color-text-muted); font-size: 14px; text-decoration: none; transition: color 0.2s;" title="Công cụ chuyển đổi ảnh WebP miễn phí">Công cụ</a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
         <a href="https://www.linkedin.com/in/trixinchao/" target="_blank" rel="noopener noreferrer"
           aria-label="Trí Nguyễn LinkedIn" title="Trí Nguyễn LinkedIn"
           style="color: var(--color-text-muted); transition: color 0.2s;">
@@ -42,5 +41,10 @@ export function renderGlobalFooter() {
         </a>
       </div>
     </div>
+    <style>
+      @media (max-width: 768px) {
+        .footer-tools-link { display: none !important; }
+      }
+    </style>
   `;
 }
