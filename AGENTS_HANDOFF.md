@@ -12,20 +12,19 @@ Last commit: pending
 - Đã có tính năng chọn Thumbnail tùy chỉnh (Auto, Group 3 ảnh, Ảnh đơn) cho các Section hiển thị dạng dự án hình ảnh.
 
 ## 3. Thay đổi gần nhất
-- **10/10/2026**: Tinh chỉnh Global Footer: link "Công cụ" dùng text thuần (14px), tách riêng khỏi cụm icon MXH, ẩn trên mobile qua responsive CSS mà không ảnh hưởng SEO.
-- **10/10/2026**: Tạo trang `/tools/` với công cụ "Image → WebP Converter" client-side (Canvas API) và Global Footer component (`src/components/footer.js`).
+- **10/10/2026**: Tích hợp Dynamic Open Graph Preview (`api/og-preview.js` + `vercel.json`): tự động render thẻ OG image/title từ Firestore cho Facebook, Zalo, Twitter khi share link `project.html`.
+- **10/10/2026**: Tạo dynamic Sitemap (`api/sitemap.js`) tự động lấy toàn bộ projects từ Firestore, kèm `public/robots.txt` và `public/sitemap.xml`.
+- **10/10/2026**: Tinh chỉnh Global Footer: link "Công cụ" text thuần (14px), tách khỏi icon MXH, ẩn trên mobile.
+- **10/10/2026**: Tạo trang `/tools/` với "Image → WebP Converter" client-side (Canvas API) và Global Footer (`src/components/footer.js`).
 - **06/10/2026**: Thêm tính năng "OG Image Cropper" trong Admin Dashboard.
 - **06/10/2026**: Nâng cấp SEO toàn diện (seo.js, Open Graph, Twitter Card, JSON-LD).
 - **06/10/2026**: Tạo `tools/batch-convert.js` — CLI tool batch convert ảnh sang WebP.
-- **04/10/2026**: Thêm tính năng cấu hình Thumbnail cho dự án ảnh trên trang chủ. Hỗ trợ 3 chế độ: "Auto", "Group 3", và "Single".
+- **04/10/2026**: Thêm tính năng cấu hình Thumbnail cho dự án ảnh (Auto, Group 3, Single).
 - **04/10/2026**: Tích hợp Lightbox với độ phân giải màn hình thực tế, fix lỗi ảnh ngang siêu rộng.
 - **01/10/2026**: Thiết kế lại Widget hiển thị dung lượng Cloudinary trên Dashboard (Credits, Storage, Bandwidth).
-- **01/10/2026**: Sửa lỗi parse Cloudinary Usage API, fix cảnh báo DOM và autocomplete mật khẩu.
-- **01/10/2026**: Thêm Serverless Function `api/cloudinary-usage.js` lấy dữ liệu dung lượng Cloudinary.
 
 ## 4. Hướng dẫn cho AI/máy tiếp theo
-- **Trang Tools** (`/tools/`): entry tại `tools/index.html`, logic `src/pages/tools.js`, CSS `src/styles/tools.css`. Thêm tool mới bằng cách thêm tab và section mới.
-- **Global Footer**: `src/components/footer.js` — gọi `renderGlobalFooter()` trong mọi trang. Chỉ sửa 1 file để cập nhật footer toàn bộ.
-- **SEO**: `src/config/seo.js` quản lý SEO tập trung. Trang tools có JSON-LD `WebApplication` riêng.
-- Nếu cần chạy local với API Vercel, đảm bảo biến môi trường `CLOUDINARY_API_SECRET` trên Vercel.
-- Tiếp theo: thêm công cụ mới (Image Resizer, Color Palette Extractor...), sitemap.xml động.
+- **Dynamic SEO & Social Preview**: `vercel.json` cấu hình rewrite bot MXH sang `api/og-preview.js` và rewrite `/sitemap.xml` sang `api/sitemap.js`. Hai hàm này dùng Firestore REST API để đọc trực tiếp data không cần SDK nặng.
+- **Trang Tools** (`/tools/`): entry tại `tools/index.html`, logic `src/pages/tools.js`, CSS `src/styles/tools.css`.
+- **Global Footer**: `src/components/footer.js` — gọi `renderGlobalFooter()` trong mọi trang.
+- **SEO client**: `src/config/seo.js` cho trải nghiệm xem trình duyệt bình thường.
